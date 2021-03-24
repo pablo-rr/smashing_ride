@@ -1,7 +1,7 @@
 {
     "logs": [
         {
-            "outputFile": "C:\\Users\\Lolmatyc\\Documents\\Godot\\SingleViewApp_template\\android\\build\\build\\intermediates\\incremental\\mergeReleaseResources\\merged.dir\\values-as\\values-as.xml",
+            "outputFile": "C:\\Users\\Lolmatyc\\Documents\\Godot\\Templates\\SingleViewApp_template\\android\\build\\build\\intermediates\\incremental\\mergeReleaseResources\\merged.dir\\values-as\\values-as.xml",
             "map": [
                 {
                     "source": "C:\\Users\\Lolmatyc\\.gradle\\caches\\transforms-2\\files-2.1\\3e38bdd44a763b41604f9fbfc9ded841\\jetified-play-services-basement-17.0.0\\res\\values-as\\values.xml",

@@ -21,8 +21,18 @@ _global_script_class_icons={
 [application]
 
 config/name="SingleViewApp_template"
-run/main_scene="res://scenes/game.tscn"
+run/main_scene="res://scenes/app.tscn"
 config/icon="res://icon.png"
+
+[autoload]
+
+JsonHelper="*res://scripts/singletons/JsonHelper.gd"
+PremadeColors="*res://scripts/singletons/PremadeColors.gd"
+ViewManager="*res://scripts/singletons/ViewManager.gd"
+AlertManager="*res://scripts/singletons/AlertManager.gd"
+AudioManager="*res://scripts/singletons/AudioManager.gd"
+AdManager="*res://scripts/singletons/AdManager.gd"
+ScoreManager="*res://scripts/singletons/ScoreManager.gd"
 
 [display]
 

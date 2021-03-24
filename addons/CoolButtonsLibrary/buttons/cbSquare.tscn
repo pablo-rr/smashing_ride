@@ -6,10 +6,7 @@
 [ext_resource path="res://addons/CoolButtonsLibrary/art/icon.png" type="Texture" id=4]
 
 [node name="cbSquare" instance=ExtResource( 1 )]
-margin_left = -100.0
-margin_top = -100.0
-margin_right = 100.0
-margin_bottom = 100.0
+margin_right = 200.0
 rect_min_size = Vector2( 200, 200 )
 texture_normal = ExtResource( 3 )
 texture_pressed = ExtResource( 2 )
