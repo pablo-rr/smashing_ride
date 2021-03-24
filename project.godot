@@ -26,8 +26,13 @@ config/icon="res://icon.png"
 
 [autoload]
 
-AlertManager="*res://scripts/singletons/AlertManager.gd"
+JsonHelper="*res://scripts/singletons/JsonHelper.gd"
+PremadeColors="*res://scripts/singletons/PremadeColors.gd"
 ViewManager="*res://scripts/singletons/ViewManager.gd"
+AlertManager="*res://scripts/singletons/AlertManager.gd"
+AudioManager="*res://scripts/singletons/AudioManager.gd"
+AdManager="*res://scripts/singletons/AdManager.gd"
+ScoreManager="*res://scripts/singletons/ScoreManager.gd"
 
 [display]
 
