@@ -1,9 +1,10 @@
-[gd_scene load_steps=6 format=2]
+[gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://scenes/view_template.tscn" type="PackedScene" id=1]
 [ext_resource path="res://addons/CoolButtonsLibrary/buttons/cbRect.tscn" type="PackedScene" id=2]
 [ext_resource path="res://addons/CoolButtonsLibrary/scripts/premadeButtons/ButtonChangeView.gd" type="Script" id=3]
 [ext_resource path="res://addons/CoolButtonsLibrary/buttons/cbMuteSquare.tscn" type="PackedScene" id=4]
+[ext_resource path="res://addons/CoolButtonsLibrary/art/icons/xs/closeBtn.png" type="Texture" id=5]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends \"res://scripts/views/ViewTemplate.gd\"
@@ -28,16 +29,19 @@ func unsetup() -> void:
 script = SubResource( 1 )
 
 [node name="cbRect" parent="ui" index="0" instance=ExtResource( 2 )]
+self_modulate = Color( 1, 0.333333, 0.2, 1 )
 script = ExtResource( 3 )
-button_description = "config"
-button_color = "Pink"
-new_view = "highscores"
+button_icon = ExtResource( 5 )
+button_description = "asd"
+button_color = "Error"
+new_view = "config"
 
 [node name="cbMuteSquare" parent="ui" index="1" instance=ExtResource( 4 )]
 margin_left = 60.5811
 margin_top = 279.742
 margin_right = 260.581
 margin_bottom = 479.742
+button_color = "Self modulation"
 
 [node name="cbMuteSquare2" parent="ui" index="2" instance=ExtResource( 4 )]
 margin_left = 486.431
@@ -50,3 +54,4 @@ margin_left = 142.544
 margin_top = 557.703
 margin_right = 342.544
 margin_bottom = 757.703
+button_color = "Success"

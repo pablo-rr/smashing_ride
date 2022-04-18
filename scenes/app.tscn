@@ -3,7 +3,7 @@
 [ext_resource path="res://scenes/views/main.tscn" type="PackedScene" id=1]
 [ext_resource path="res://scenes/views/credits.tscn" type="PackedScene" id=2]
 [ext_resource path="res://scenes/views/config.tscn" type="PackedScene" id=3]
-[ext_resource path="res://admob-lib/admob.gd" type="Script" id=4]
+[ext_resource path="res://addons/admob-lib/admob.gd" type="Script" id=4]
 [ext_resource path="res://scenes/views/highscores.tscn" type="PackedScene" id=5]
 
 [sub_resource type="GDScript" id=1]
@@ -75,5 +75,6 @@ visible = false
 position = Vector2( 0, -1 )
 
 [node name="main" parent="." instance=ExtResource( 1 )]
+
 [connection signal="banner_failed_to_load" from="AdMob" to="." method="_on_AdMob_banner_failed_to_load"]
 [connection signal="banner_loaded" from="AdMob" to="." method="_on_AdMob_banner_loaded"]

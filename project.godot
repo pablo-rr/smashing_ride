@@ -12,17 +12,17 @@ _global_script_classes=[ {
 "base": "Node",
 "class": "AdMob",
 "language": "GDScript",
-"path": "res://admob-lib/admob.gd"
+"path": "res://addons/admob-lib/admob.gd"
 } ]
 _global_script_class_icons={
-"AdMob": "res://admob-lib/icon.png"
+"AdMob": "res://addons/admob-lib/icon.png"
 }
 
 [application]
 
-config/name="SingleViewApp_template"
+config/name="Godot SVA Framework"
 run/main_scene="res://scenes/app.tscn"
-config/icon="res://icon.png"
+config/icon="res://SVAicon.png"
 
 [autoload]
 

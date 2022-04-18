@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://art/sfx/buttonPress2.wav" type="AudioStream" id=1]
+[ext_resource path="res://addons/CoolButtonsLibrary/art/sfx/buttonPress2.wav" type="AudioStream" id=1]
 
 [node name="cbTemplate" type="TextureButton"]
 margin_right = 355.0

@@ -1,3 +1,4 @@
+tool
 extends TextureButton
 
 signal button_released
@@ -5,42 +6,45 @@ signal button_pressed
 
 export var button_icon : Texture = null setget set_button_icon
 export var button_description : String = "desc" setget set_button_description
-export(String, "Self modulation", "Generic", "Success", "Error", "Warn", "White", "Lavender", "Pink", "Purple", "Orange") var button_color : String = "Generic"
+export(String, "Self modulation", "Generic", "Success", "Error", "Warn", "White", "Lavender", "Pink", "Purple", "Orange") var button_color : String = "Generic" setget setup_color
 
 onready var press_offset : int = rect_size.y/20
 
 func _ready() -> void:
-	setup_color()
+	setup_color(button_color)
 	connect("button_down", self, "press_action")
 	connect("button_up", self, "release_action")
 
-func setup_color() -> void:
+func setup_color(color_name : String) -> void:
+	button_color = color_name
 	var new_color : Color
-	if(button_color == "Generic"):
+	if(color_name == "Generic"):
 		new_color = PremadeColors.COLOR_GENERIC
-	elif(button_color == "Success"):
+	elif(color_name == "Success"):
 		new_color = PremadeColors.COLOR_SUCCESS
-	elif(button_color == "Error"):
+	elif(color_name == "Error"):
 		new_color = PremadeColors.COLOR_ERROR
-	elif(button_color == "Warn"):
+	elif(color_name == "Warn"):
 		new_color = PremadeColors.COLOR_WARN
-	elif(button_color == "Lavender"):
+	elif(color_name == "Lavender"):
 		new_color = PremadeColors.COLOR_LAVENDER
-	elif(button_color == "Pink"):
+	elif(color_name == "Pink"):
 		new_color = PremadeColors.COLOR_PINK
-	elif(button_color == "Purple"):
+	elif(color_name == "Purple"):
 		new_color = PremadeColors.COLOR_PURPLE
-	elif(button_color == "White"):
+	elif(color_name == "White"):
 		new_color = PremadeColors.COLOR_WHITE
-	elif(button_color == "Orange"):
+	elif(color_name == "Orange"):
 		new_color = PremadeColors.COLOR_ORANGE
+	else:
+		new_color = PremadeColors.COLOR_GENERIC
 	
-	if(button_color != "Self modulation"):
+	if(color_name != "Self modulation"):
 		self_modulate = Color8(new_color.r, new_color.g, new_color.b)
 	
 func play_sfx() -> void:
 	randomize()
-	$pressSfx.pitch_scale = rand_range(0.9, 1.1)
+	$pressSfx.pitch_scale = rand_range(0.95, 1.05)
 	$pressSfx.play()
 
 func press_action() -> void:

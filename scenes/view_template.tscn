@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=2]
 
-[ext_resource path="res://fonts/resources/ubuntu_108.tres" type="DynamicFont" id=1]
+[ext_resource path="res://fonts/resources/roboto_108.tres" type="DynamicFont" id=1]
 
 [node name="view_template" type="Node2D"]
 
@@ -19,6 +19,3 @@ text = "[view title]"
 align = 1
 valign = 1
 autowrap = true
-__meta__ = {
-"_edit_use_anchors_": false
-}
