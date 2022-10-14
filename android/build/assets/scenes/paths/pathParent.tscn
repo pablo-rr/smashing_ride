@@ -1,0 +1,25 @@
+[gd_scene load_steps=2 format=2]
+
+[sub_resource type="GDScript" id=1]
+script/source = "extends Spatial
+
+onready var pathPoints : Array = []
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	for child in get_child_count():
+		pathPoints.append(get_child(child))
+		get_child(child).index = child
+
+func get_next_point(current : Array) -> Array:
+	var index : int = current[1]
+	if(current[1] < pathPoints.size() -1):
+		index = current[1] + 1
+	else:
+		index = 0
+	return [pathPoints[index], index]
+"
+
+[node name="pathParent" type="Spatial"]
+script = SubResource( 1 )

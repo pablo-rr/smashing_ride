@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/explodemini.wav-39f91fbae744f1045cf05b35d66e148b.sample"
+
+[deps]
+
+source_file="res://art/audio/sfx/explodemini.wav"
+dest_files=[ "res://.import/explodemini.wav-39f91fbae744f1045cf05b35d66e148b.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop=false
+compress/mode=0

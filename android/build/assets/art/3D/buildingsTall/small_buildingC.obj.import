@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/small_buildingC.obj-cdad4c3f3d9c6c252e6a17b787a57a6d.mesh"
+
+[deps]
+
+files=[ "res://.import/small_buildingC.obj-cdad4c3f3d9c6c252e6a17b787a57a6d.mesh" ]
+
+source_file="res://art/3D/buildingsTall/small_buildingC.obj"
+dest_files=[ "res://.import/small_buildingC.obj-cdad4c3f3d9c6c252e6a17b787a57a6d.mesh", "res://.import/small_buildingC.obj-cdad4c3f3d9c6c252e6a17b787a57a6d.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

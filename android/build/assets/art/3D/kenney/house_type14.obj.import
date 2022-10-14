@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/house_type14.obj-a6defef0cb19950c15f0a3393762bd3d.mesh"
+
+[deps]
+
+files=[ "res://.import/house_type14.obj-a6defef0cb19950c15f0a3393762bd3d.mesh" ]
+
+source_file="res://art/3D/kenney/house_type14.obj"
+dest_files=[ "res://.import/house_type14.obj-a6defef0cb19950c15f0a3393762bd3d.mesh", "res://.import/house_type14.obj-a6defef0cb19950c15f0a3393762bd3d.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

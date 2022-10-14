@@ -1,4 +1,4 @@
-#Wed Mar 24 14:08:07 CET 2021
-base.0=C\:\\Users\\Lolmatyc\\Documents\\Godot\\Templates\\SingleViewApp_template\\android\\build\\build\\intermediates\\dex\\debug\\mergeDexDebug\\out\\classes.dex
-path.0=classes.dex
+#Thu Apr 28 15:10:53 CEST 2022
+base.0=D\:\\Users\\Lolmatyc\\Documents\\Proyectos Godot\\Proyectos\\3.x (Android)\\Taxi\\android\\build\\build\\intermediates\\dex\\debug\\mergeDexDebug\\classes.dex
 renamed.0=classes.dex
+path.0=classes.dex

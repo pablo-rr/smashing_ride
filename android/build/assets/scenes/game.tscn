@@ -1,0 +1,3797 @@
+[gd_scene load_steps=43 format=2]
+
+[ext_resource path="res://scenes/player.tscn" type="PackedScene" id=1]
+[ext_resource path="res://scenes/paths/pathPoint.tscn" type="PackedScene" id=2]
+[ext_resource path="res://scenes/paths/pathParent.tscn" type="PackedScene" id=3]
+[ext_resource path="res://addons/joystick/virtual_joystick.tscn" type="PackedScene" id=4]
+[ext_resource path="res://scenes/roadsNoLine.tres" type="MeshLibrary" id=5]
+[ext_resource path="res://fonts/resources/roboto_36.tres" type="DynamicFont" id=6]
+[ext_resource path="res://scenes/models/build2.tscn" type="PackedScene" id=7]
+[ext_resource path="res://scenes/models/build1.tscn" type="PackedScene" id=8]
+[ext_resource path="res://scenes/models/house4.tscn" type="PackedScene" id=9]
+[ext_resource path="res://scenes/models/house6.tscn" type="PackedScene" id=10]
+[ext_resource path="res://scenes/models/house3.tscn" type="PackedScene" id=11]
+[ext_resource path="res://scenes/models/house2.tscn" type="PackedScene" id=12]
+[ext_resource path="res://scenes/models/house5.tscn" type="PackedScene" id=13]
+[ext_resource path="res://scenes/models/house1.tscn" type="PackedScene" id=14]
+[ext_resource path="res://scenes/pups/pupTurbo.tscn" type="PackedScene" id=15]
+[ext_resource path="res://scenes/models/build4.tscn" type="PackedScene" id=16]
+[ext_resource path="res://scenes/models/build6.tscn" type="PackedScene" id=17]
+[ext_resource path="res://scenes/models/fountain.tscn" type="PackedScene" id=18]
+[ext_resource path="res://scenes/models/build5.tscn" type="PackedScene" id=19]
+[ext_resource path="res://art/3D/arrows/arrow4.obj" type="ArrayMesh" id=20]
+[ext_resource path="res://scenes/models/tree1.tscn" type="PackedScene" id=21]
+[ext_resource path="res://scenes/models/build3.tscn" type="PackedScene" id=22]
+[ext_resource path="res://scenes/ramp.tscn" type="PackedScene" id=23]
+
+[sub_resource type="GDScript" id=84]
+script/source = "extends Spatial
+
+onready var objective : Spatial
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	objective = $OBJ
+
+func _process(delta: float) -> void:
+	var dir : float = objective.transform.origin.signed_angle_to(objective.transform.origin - $player.transform.origin, Vector3(0, 1, 0))
+	
+	$UI/debug/plrD.text = str($player.transform.origin)
+	$UI/debug/objD.text = str($OBJ.transform.origin)
+	$UI/debug/plr2obj.text = str(($player.transform.origin - $OBJ.transform.origin).normalized())
+	$UI/debug/plr2objAng.text = str(dir)
+
+#	print(rad2deg(dir))
+#	print(rad2deg(dir))
+#	$UI/Arrow/Viewport/space/MeshInstance.rotation.y = dir - deg2rad(45)
+	$UI/Arrow/Viewport/space/arrow.rotation.y = dir - deg2rad(90)
+"
+
+[sub_resource type="ProceduralSky" id=8]
+sky_top_color = Color( 0.368627, 0.705882, 0.894118, 1 )
+sky_horizon_color = Color( 0.588235, 0.768627, 0.909804, 1 )
+sun_color = Color( 1, 0.937255, 0.6, 1 )
+sun_angle_min = 3.0
+
+[sub_resource type="Environment" id=9]
+background_mode = 2
+background_sky = SubResource( 8 )
+ambient_light_color = Color( 1, 1, 1, 1 )
+ambient_light_energy = 1.15
+ambient_light_sky_contribution = 0.0
+
+[sub_resource type="Environment" id=86]
+ambient_light_color = Color( 0.698039, 0.192157, 0.192157, 1 )
+
+[sub_resource type="World" id=87]
+environment = SubResource( 86 )
+
+[sub_resource type="Shader" id=80]
+
+[sub_resource type="ShaderMaterial" id=81]
+shader = SubResource( 80 )
+
+[sub_resource type="QuadMesh" id=77]
+
+[sub_resource type="Shader" id=78]
+code = "/*
+	Sobel/Depth Outline Shader by Firerabbit
+	
+	MIT License
+*/
+
+shader_type spatial;
+render_mode unshaded;
+
+uniform int _thickness : hint_range(0,3) = 1;
+uniform float _detail : hint_range(0.0,256.0) = 256.0;
+
+varying mat4 CAMERA;
+
+void vertex() 
+{
+	POSITION = vec4(VERTEX, 1.0);
+	CAMERA = CAMERA_MATRIX;
+}
+
+
+void fragment() 
+{
+	float depth = texture(DEPTH_TEXTURE, SCREEN_UV).x;
+	vec3 ndc = vec3(SCREEN_UV, depth) * 2.0 - 1.0;
+	vec4 view = INV_PROJECTION_MATRIX * vec4(ndc, 1.0);
+	view.xyz /= view.w;
+	float linear_depth = -view.z;
+
+	float pix[9];
+	for( int y=0; y<3; y ++ ) {
+		for( int x=0; x<3; x ++ ) {
+			pix[y*3+x] = texture( SCREEN_TEXTURE, SCREEN_UV + vec2( float( x-1 ), float( y-1 ) ) *  float(_thickness) / VIEWPORT_SIZE ).r;
+		}
+	}
+	// Sobel
+	float sobel_src_x = (
+		pix[0] * -1.0
+	+	pix[3] * -2.0
+	+	pix[6] * -1.0
+	+	pix[2] * 1.0
+	+	pix[5] * 2.0
+	+	pix[8] * 1.0
+	);
+	float sobel_src_y = (
+		pix[0] * -1.0
+	+	pix[1] * -2.0
+	+	pix[2] * -1.0
+	+	pix[6] * 1.0
+	+	pix[7] * 2.0
+	+	pix[8] * 1.0
+	);
+	float sobel = length(vec2(sobel_src_x, sobel_src_y));
+	float outline = 1.0 - sobel * _detail * linear_depth / 8.0;
+	
+	outline = clamp(outline, 0.0, 1.0);
+	
+	ALBEDO = vec3(0.0);
+	ALPHA = float(outline < 0.5);
+}"
+
+[sub_resource type="ShaderMaterial" id=79]
+shader = SubResource( 78 )
+shader_param/_thickness = 1
+shader_param/_detail = 256.0
+
+[sub_resource type="GDScript" id=76]
+script/source = "extends Label
+
+
+func _process(delta: float) -> void:
+	text = str(\"FPS: \", Engine.get_frames_per_second())
+"
+
+[sub_resource type="GDScript" id=7]
+script/source = "extends Camera
+
+
+onready var shader : Material = preload(\"res://shaders/TransparentMaterial.material\")
+onready var objective : Spatial = get_parent().get_node(\"player\")
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+#	transform.origin = lerp(transform.origin, objective.transform.origin + Vector3(-1.7, 1.5, -1.7), 0.4)
+#	transform.origin = lerp(transform.origin, objective.transform.origin + Vector3(-5, 7.3, -5), 0.4)
+	transform.origin = objective.transform.origin + Vector3(-5, 7.3, -5)
+
+func _on_Area_body_entered(body: Node) -> void:
+	if(body.name == \"StaticBody\"):
+		for i in body.get_parent().get_surface_material_count():
+			body.get_parent().set_surface_material(i, shader)
+
+func _on_Area_body_exited(body: Node) -> void:
+	if(body.name == \"StaticBody\"):
+		for i in body.get_parent().get_surface_material_count():
+			body.get_parent().set_surface_material(i, null)
+"
+
+[sub_resource type="BoxShape" id=72]
+extents = Vector3( 8.96086, 4.60145, 14.0789 )
+
+[sub_resource type="ConcavePolygonShape" id=73]
+data = PoolVector3Array( 1, 0, 1, -1, 0, 1, 1, 0, -1, -1, 0, 1, -1, 0, -1, 1, 0, -1 )
+
+[sub_resource type="PlaneMesh" id=70]
+
+[sub_resource type="SpatialMaterial" id=71]
+albedo_color = Color( 0.0509804, 0.431373, 0, 1 )
+metallic_specular = 0.0
+
+[sub_resource type="PlaneMesh" id=74]
+
+[sub_resource type="SpatialMaterial" id=75]
+albedo_color = Color( 0.380392, 0.290196, 0.219608, 1 )
+metallic_specular = 0.0
+
+[sub_resource type="CubeMesh" id=85]
+
+[node name="game" type="Spatial"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.121414, 0.122665, -0.0674286 )
+script = SubResource( 84 )
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource( 9 )
+
+[node name="DirectionalLight" type="DirectionalLight" parent="."]
+transform = Transform( 0.553173, -0.80468, 0.215613, 0, 0.258819, 0.965926, -0.833066, -0.534325, 0.143172, 5.21541e-08, 6.46612, 0 )
+light_energy = 0.3
+light_indirect_energy = 0.0
+directional_shadow_mode = 1
+directional_shadow_split_1 = 0.029
+directional_shadow_split_2 = 0.043
+directional_shadow_split_3 = 0.121
+directional_shadow_normal_bias = 0.0
+directional_shadow_depth_range = 1
+directional_shadow_max_distance = 300.0
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true
+}
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="virtual_joystick" parent="UI" instance=ExtResource( 4 )]
+margin_left = 260.0
+margin_top = -280.0
+margin_right = 460.0
+margin_bottom = -80.0
+
+[node name="Arrow" type="ViewportContainer" parent="UI"]
+margin_top = -100.0
+margin_right = 720.0
+margin_bottom = 620.0
+rect_min_size = Vector2( 720, 720 )
+
+[node name="Viewport" type="Viewport" parent="UI/Arrow"]
+size = Vector2( 720, 720 )
+own_world = true
+world = SubResource( 87 )
+transparent_bg = true
+handle_input_locally = false
+render_target_update_mode = 3
+
+[node name="space" type="Spatial" parent="UI/Arrow/Viewport"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 25.1109, 3.12535, 0 )
+
+[node name="arrow" type="Position3D" parent="UI/Arrow/Viewport/space"]
+
+[node name="MeshInstance" type="MeshInstance" parent="UI/Arrow/Viewport/space/arrow"]
+transform = Transform( -4.37114e-08, -1, -4.37114e-08, 0, -4.37114e-08, 1, -1, 4.37114e-08, 1.91069e-15, 0, 0, -0.303228 )
+mesh = ExtResource( 20 )
+skeleton = NodePath("../../..")
+material/0 = SubResource( 81 )
+
+[node name="Camera" type="Camera" parent="UI/Arrow/Viewport/space"]
+transform = Transform( -4.2222e-08, -0.5, 0.866025, -1.13133e-08, 0.866025, 0.5, -1, 1.13133e-08, -4.2222e-08, 4.66761, 3.42991, -5.30287e-08 )
+current = true
+
+[node name="cell" type="MeshInstance" parent="UI/Arrow/Viewport/space"]
+transform = Transform( -8.74228e-08, 0, -2, 0, 1, 0, 2, 0, -8.74228e-08, -0.428644, 0, -1.87366e-08 )
+mesh = SubResource( 77 )
+skeleton = NodePath("../../../../..")
+material/0 = SubResource( 79 )
+
+[node name="OmniLight" type="OmniLight" parent="UI/Arrow/Viewport/space"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.566027, 1.12029, 0.378937 )
+light_color = Color( 0.462745, 0.462745, 0.462745, 1 )
+omni_range = 3.981
+
+[node name="debug" type="VBoxContainer" parent="UI"]
+margin_right = 40.0
+margin_bottom = 40.0
+
+[node name="FPS" type="Label" parent="UI/debug"]
+margin_right = 57.0
+margin_bottom = 48.0
+custom_fonts/font = ExtResource( 6 )
+text = "FPS"
+script = SubResource( 76 )
+
+[node name="plrD" type="Label" parent="UI/debug"]
+margin_top = 52.0
+margin_right = 57.0
+margin_bottom = 100.0
+custom_fonts/font = ExtResource( 6 )
+
+[node name="objD" type="Label" parent="UI/debug"]
+margin_top = 104.0
+margin_right = 57.0
+margin_bottom = 152.0
+custom_fonts/font = ExtResource( 6 )
+
+[node name="plr2obj" type="Label" parent="UI/debug"]
+margin_top = 156.0
+margin_right = 57.0
+margin_bottom = 204.0
+custom_fonts/font = ExtResource( 6 )
+
+[node name="plr2objAng" type="Label" parent="UI/debug"]
+margin_top = 208.0
+margin_right = 57.0
+margin_bottom = 256.0
+custom_fonts/font = ExtResource( 6 )
+
+[node name="Camera" type="Camera" parent="."]
+transform = Transform( -0.707107, 0.5, -0.5, 0, 0.707107, 0.707107, 0.707107, 0.5, -0.5, -5, 7.3, -5 )
+projection = 1
+current = true
+size = 5.0
+near = 0.01
+far = 8192.0
+script = SubResource( 7 )
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true
+}
+
+[node name="Area" type="Area" parent="Camera"]
+transform = Transform( 1, 3.09086e-08, 1.28027e-08, -1.28028e-08, 0.707107, -0.707107, -3.09086e-08, 0.707107, 0.707107, 0, 0, 0 )
+
+[node name="hider" type="CollisionShape" parent="Camera/Area"]
+transform = Transform( 0.965926, 0, -0.258819, 0, 1, 0, 0.258819, 0, 0.965926, 0, -4.88995, 7.9554 )
+shape = SubResource( 72 )
+
+[node name="hider2" type="CollisionShape" parent="Camera/Area"]
+transform = Transform( 0.965926, 0, 0.258819, 0, 1, 0, -0.258819, 0, 0.965926, 0, -4.88995, 7.9554 )
+shape = SubResource( 72 )
+
+[node name="player" parent="." instance=ExtResource( 1 )]
+transform = Transform( 0.001, 0, 0, 0, 0.001, 0, 0, 0, 0.001, 0, 0, 0 )
+
+[node name="roads" type="GridMap" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.502248, 0 )
+mesh_library = ExtResource( 5 )
+cell_size = Vector3( 1, 1, 1 )
+cell_octant_size = 4
+data = {
+"cells": PoolIntArray( 1, 0, 1441798, 6, 0, 1441798, 65497, 0, 1441798, 65499, 0, 1048582, 65507, 0, 1048582, 65510, 0, 1441798, 65514, 0, 1048582, 65516, 0, 1441798, 65518, 0, 1441798, 65521, 0, 1441798, 65524, 0, 1441798, 65526, 0, 1048577, 65527, 0, 1441793, 65529, 0, 1048577, 65530, 0, 655365, 65531, 0, 5, 65532, 0, 655365, 65533, 0, 655366, 65534, 0, 655366, 65535, 0, 1441797, 0, 1, 5, 1, 1, 655365, 2, 1, 5, 3, 1, 655366, 4, 1, 655366, 5, 1, 655366, 6, 1, 1441797, 65497, 1, 655361, 65498, 1, 6, 65499, 1, 1048579, 65500, 1, 655366, 65501, 1, 655366, 65502, 1, 655366, 65503, 1, 655366, 65504, 1, 655366, 65505, 1, 655366, 65506, 1, 655366, 65507, 1, 1441797, 65510, 1, 1048581, 65511, 1, 6, 65512, 1, 6, 65513, 1, 6, 65514, 1, 1441795, 65515, 1, 655366, 65516, 1, 1441793, 65518, 1, 655361, 65519, 1, 655366, 65520, 1, 655366, 65521, 1, 655365, 65522, 1, 1, 65524, 1, 1441798, 65526, 1, 1048582, 65529, 1, 1048582, 65531, 1, 1048582, 65535, 1, 655361, 0, 2, 1441798, 2, 2, 1441798, 6, 2, 1441798, 65499, 2, 1048582, 65507, 2, 655361, 65508, 2, 1, 65510, 2, 1441798, 65514, 2, 1441798, 65522, 2, 1048581, 65523, 2, 6, 65524, 2, 655363, 65525, 2, 655366, 65526, 2, 655365, 65527, 2, 655366, 65528, 2, 655366, 65529, 2, 1441793, 65531, 2, 1048582, 0, 3, 1441797, 2, 3, 655361, 3, 3, 1, 6, 3, 1048582, 65499, 3, 655361, 65500, 3, 6, 65501, 3, 6, 65502, 3, 5, 65503, 3, 6, 65504, 3, 1, 65508, 3, 1048581, 65509, 3, 6, 65510, 3, 3, 65511, 3, 6, 65512, 3, 655366, 65513, 3, 655366, 65514, 3, 655363, 65515, 3, 655366, 65516, 3, 655366, 65517, 3, 6, 65518, 3, 6, 65519, 3, 6, 65520, 3, 1, 65522, 3, 1048582, 65524, 3, 1441798, 65531, 3, 1048582, 65533, 3, 1048577, 65534, 3, 655366, 65535, 3, 655366, 0, 4, 1441798, 3, 4, 1441798, 6, 4, 1048582, 65502, 4, 1441798, 65504, 4, 1441798, 65508, 4, 1048582, 65510, 4, 1441798, 65514, 4, 1441798, 65520, 4, 1048582, 65522, 4, 1048582, 65524, 4, 1048581, 65525, 4, 6, 65526, 4, 5, 65527, 4, 6, 65528, 4, 6, 65529, 4, 6, 65530, 4, 6, 65531, 4, 655365, 65532, 4, 6, 65533, 4, 1441797, 0, 5, 1441798, 3, 5, 655361, 4, 5, 5, 5, 5, 655366, 6, 5, 655363, 7, 5, 655366, 8, 5, 1, 65502, 5, 1441798, 65504, 5, 655361, 65505, 5, 6, 65506, 5, 6, 65507, 5, 6, 65508, 5, 655363, 65509, 5, 6, 65510, 5, 1441797, 65514, 5, 1048581, 65515, 5, 6, 65516, 5, 6, 65517, 5, 5, 65518, 5, 655366, 65519, 5, 655366, 65520, 5, 3, 65521, 5, 6, 65522, 5, 1441795, 65523, 5, 6, 65524, 5, 1441793, 65526, 5, 1048582, 65533, 5, 1048582, 0, 6, 1441797, 4, 6, 1441798, 6, 6, 1048582, 8, 6, 1441798, 65502, 6, 1441798, 65508, 6, 1441798, 65510, 6, 1441798, 65514, 6, 1048582, 65517, 6, 1048582, 65520, 6, 1048582, 65522, 6, 1441798, 65526, 6, 1048582, 65528, 6, 1048577, 65529, 6, 655366, 65530, 6, 5, 65531, 6, 655366, 65532, 6, 655366, 65533, 6, 655363, 65534, 6, 655366, 65535, 6, 655366, 0, 7, 1048581, 1, 7, 655366, 2, 7, 655366, 3, 7, 655366, 4, 7, 1441797, 6, 7, 655361, 7, 7, 6, 8, 7, 1441797, 65502, 7, 1441798, 65508, 7, 1441798, 65510, 7, 1048581, 65511, 7, 655366, 65512, 7, 655366, 65513, 7, 655366, 65514, 7, 1441793, 65517, 7, 1048582, 65520, 7, 1048582, 65522, 7, 1048581, 65523, 7, 6, 65524, 7, 6, 65525, 7, 6, 65526, 7, 1441797, 65528, 7, 1048582, 65530, 7, 1048582, 65533, 7, 1048582, 0, 8, 1441798, 4, 8, 1441798, 8, 8, 1441798, 65502, 8, 1048581, 65503, 8, 655366, 65504, 8, 655366, 65505, 8, 5, 65506, 8, 655366, 65507, 8, 655366, 65508, 8, 1441797, 65510, 8, 1441798, 65516, 8, 1048577, 65517, 8, 655365, 65518, 8, 655366, 65519, 8, 655366, 65520, 8, 1441795, 65521, 8, 6, 65522, 8, 1441797, 65526, 8, 1048582, 65528, 8, 1048582, 65530, 8, 1048582, 65533, 8, 1048582, 0, 9, 1048579, 1, 9, 655366, 2, 9, 6, 3, 9, 6, 4, 9, 1048579, 5, 9, 6, 6, 9, 5, 7, 9, 6, 8, 9, 1441793, 65502, 9, 1048582, 65505, 9, 1441798, 65508, 9, 1441798, 65510, 9, 1048582, 65516, 9, 1441798, 65520, 9, 1441798, 65522, 9, 1441798, 65524, 9, 1048577, 65525, 9, 6, 65526, 9, 1441797, 65528, 9, 1048582, 65530, 9, 1048582, 65533, 9, 1048581, 65534, 9, 655366, 65535, 9, 655366, 0, 10, 1441798, 4, 10, 1441798, 6, 10, 1048582, 65502, 10, 1048582, 65505, 10, 1441798, 65508, 10, 1048581, 65509, 10, 655366, 65510, 10, 655365, 65511, 10, 6, 65512, 10, 6, 65513, 10, 6, 65514, 10, 6, 65515, 10, 5, 65516, 10, 655365, 65517, 10, 5, 65518, 10, 655366, 65519, 10, 655366, 65520, 10, 1441797, 65522, 10, 1441798, 65524, 10, 1048582, 65526, 10, 655361, 65527, 10, 655366, 65528, 10, 1441797, 65530, 10, 1048582, 65533, 10, 1048582, 0, 11, 655365, 1, 11, 655366, 2, 11, 1, 4, 11, 1441798, 6, 11, 1048582, 65502, 11, 1048582, 65505, 11, 1441798, 65508, 11, 1441798, 65515, 11, 1048582, 65517, 11, 1441798, 65520, 11, 1441798, 65522, 11, 655361, 65523, 11, 5, 65524, 11, 1441793, 65528, 11, 655361, 65529, 11, 655366, 65530, 11, 1048579, 65531, 11, 655366, 65532, 11, 655366, 65533, 11, 1441795, 65534, 11, 655366, 65535, 11, 5, 2, 12, 1441798, 4, 12, 1441798, 6, 12, 1048582, 65502, 12, 655361, 65503, 12, 6, 65504, 12, 6, 65505, 12, 655363, 65506, 12, 6, 65507, 12, 6, 65508, 12, 655365, 65509, 12, 6, 65510, 12, 1, 65515, 12, 1048582, 65517, 12, 1048582, 65520, 12, 1441798, 65523, 12, 1441798, 65530, 12, 1441798, 65533, 12, 1048582, 65535, 12, 1048582, 2, 13, 655361, 3, 13, 5, 4, 13, 655365, 5, 13, 6, 6, 13, 1441793, 65505, 13, 1441798, 65510, 13, 1441798, 65512, 13, 1048577, 65513, 13, 655366, 65514, 13, 655366, 65515, 13, 3, 65516, 13, 655366, 65517, 13, 655365, 65518, 13, 655366, 65519, 13, 655366, 65520, 13, 1441797, 65523, 13, 1048581, 65524, 13, 6, 65525, 13, 6, 65526, 13, 6, 65527, 13, 1, 65530, 13, 1441798, 65533, 13, 1048582, 65535, 13, 1048582, 0, 14, 1, 3, 14, 1441798, 65505, 14, 1048581, 65506, 14, 6, 65507, 14, 1, 65510, 14, 1048581, 65511, 14, 655366, 65512, 14, 1441797, 65515, 14, 1441798, 65520, 14, 1048581, 65521, 14, 655366, 65522, 14, 655366, 65523, 14, 1441797, 65527, 14, 1048581, 65528, 14, 6, 65529, 14, 6, 65530, 14, 655365, 65531, 14, 6, 65532, 14, 6, 65533, 14, 1441797, 65535, 14, 655361, 0, 15, 1048582, 3, 15, 1441798, 65505, 15, 1441798, 65507, 15, 1441798, 65510, 15, 1441798, 65512, 15, 1048582, 65515, 15, 1441798, 65519, 15, 1048577, 65520, 15, 1441793, 65523, 15, 1441798, 65527, 15, 1048582, 65533, 15, 1048582, 0, 16, 1441797, 3, 16, 1441798, 65505, 16, 1048581, 65506, 16, 6, 65507, 16, 3, 65508, 16, 655366, 65509, 16, 655366, 65510, 16, 1441797, 65512, 16, 655361, 65513, 16, 6, 65514, 16, 6, 65515, 16, 655365, 65516, 16, 1, 65519, 16, 1048582, 65523, 16, 1441798, 65527, 16, 1048582, 65533, 16, 1048581, 65534, 16, 6, 65535, 16, 6, 0, 17, 1048582, 3, 17, 1441798, 65505, 17, 1048582, 65507, 17, 1048582, 65510, 17, 1441798, 65516, 17, 1048581, 65517, 17, 6, 65518, 17, 6, 65519, 17, 1441795, 65520, 17, 655366, 65521, 17, 655366, 65522, 17, 655366, 65523, 17, 655365, 65524, 17, 655366, 65525, 17, 5, 65526, 17, 655366, 65527, 17, 1048579, 65528, 17, 6, 65529, 17, 6, 65530, 17, 5, 65531, 17, 6, 65532, 17, 6, 65533, 17, 1441797, 0, 18, 1048581, 1, 18, 6, 2, 18, 6, 3, 18, 1441793, 65505, 18, 655361, 65506, 18, 6, 65507, 18, 1441793, 65510, 18, 655361, 65511, 18, 655366, 65512, 18, 1, 65516, 18, 1441798, 65519, 18, 1441798, 65525, 18, 1048582, 65527, 18, 1048582, 65530, 18, 1441798, 65533, 18, 1048582, 0, 19, 1441793, 65512, 19, 655361, 65513, 19, 655366, 65514, 19, 655366, 65515, 19, 655366, 65516, 19, 1441797, 65519, 19, 1441798, 65521, 19, 1048577, 65522, 19, 6, 65523, 19, 1, 65525, 19, 1048582, 65527, 19, 655361, 65528, 19, 1, 65530, 19, 1441798, 65532, 19, 1048577, 65533, 19, 1441793, 65535, 19, 1048577, 65516, 20, 1048582, 65519, 20, 1441798, 65521, 20, 1441798, 65523, 20, 1441798, 65525, 20, 1048582, 65528, 20, 1048582, 65530, 20, 1441798, 65532, 20, 1048582, 65535, 20, 1441798, 65516, 21, 655361, 65517, 21, 655366, 65518, 21, 655366, 65519, 21, 655363, 65520, 21, 655366, 65521, 21, 1441793, 65523, 21, 655361, 65524, 21, 655366, 65525, 21, 1048579, 65526, 21, 655366, 65527, 21, 655366, 65528, 21, 655365, 65529, 21, 655366, 65530, 21, 1048579, 65531, 21, 655366, 65532, 21, 655365, 65533, 21, 655366, 65534, 21, 655366, 65535, 21, 1441793, 65519, 22, 1441798, 65525, 22, 1048582, 65530, 22, 1441798, 65519, 23, 655361, 65520, 23, 6, 65521, 23, 1, 65523, 23, 1048577, 65524, 23, 655366, 65525, 23, 1441797, 65528, 23, 1048577, 65529, 23, 655366, 65530, 23, 1441793, 65521, 24, 1048582, 65523, 24, 1048582, 65525, 24, 1048582, 65527, 24, 1048577, 65528, 24, 1441793, 65521, 25, 655361, 65522, 25, 655366, 65523, 25, 1441793, 65525, 25, 655361, 65526, 25, 6, 65527, 25, 1441793, 65498, 65519, 1048577, 65499, 65519, 655366, 65500, 65519, 655366, 65501, 65519, 655366, 65502, 65519, 1, 65516, 65519, 1048577, 65517, 65519, 6, 65518, 65519, 1, 65498, 65520, 1048582, 65502, 65520, 1048581, 65503, 65520, 6, 65504, 65520, 6, 65505, 65520, 5, 65506, 65520, 6, 65507, 65520, 6, 65508, 65520, 1, 65510, 65520, 1048577, 65511, 65520, 655366, 65512, 65520, 655366, 65513, 65520, 5, 65514, 65520, 655366, 65515, 65520, 655366, 65516, 65520, 1441797, 65518, 65520, 1048581, 65519, 65520, 6, 65520, 65520, 6, 65521, 65520, 1, 65498, 65521, 655361, 65499, 65521, 655366, 65500, 65521, 655366, 65501, 65521, 655366, 65502, 65521, 1441793, 65505, 65521, 1048582, 65508, 65521, 1441798, 65510, 65521, 1048582, 65513, 65521, 1441798, 65516, 65521, 655361, 65517, 65521, 5, 65518, 65521, 1441793, 65521, 65521, 1441798, 65505, 65522, 1048581, 65506, 65522, 655366, 65507, 65522, 655366, 65508, 65522, 655365, 65509, 65522, 655366, 65510, 65522, 1441797, 65513, 65522, 1441798, 65517, 65522, 1441798, 65521, 65522, 1441798, 65505, 65523, 1048582, 65510, 65523, 1048582, 65512, 65523, 1048577, 65513, 65523, 655365, 65514, 65523, 1, 65517, 65523, 1441798, 65521, 65523, 1441798, 65499, 65524, 1048577, 65500, 65524, 6, 65501, 65524, 6, 65502, 65524, 6, 65503, 65524, 5, 65504, 65524, 6, 65505, 65524, 655365, 65506, 65524, 6, 65507, 65524, 5, 65508, 65524, 6, 65509, 65524, 6, 65510, 65524, 655363, 65511, 65524, 6, 65512, 65524, 1441797, 65514, 65524, 1048581, 65515, 65524, 655366, 65516, 65524, 655366, 65517, 65524, 1441795, 65518, 65524, 6, 65519, 65524, 6, 65520, 65524, 5, 65521, 65524, 655365, 65522, 65524, 655366, 65523, 65524, 5, 65524, 65524, 655366, 65525, 65524, 655366, 65526, 65524, 6, 65527, 65524, 6, 65528, 65524, 1, 65499, 65525, 1048582, 65503, 65525, 1441798, 65507, 65525, 1441798, 65510, 65525, 1441798, 65512, 65525, 1441798, 65514, 65525, 1441798, 65517, 65525, 1441798, 65520, 65525, 1441798, 65523, 65525, 1441798, 65528, 65525, 1048582, 65530, 65525, 1048577, 65531, 65525, 655366, 65532, 65525, 655366, 65533, 65525, 655366, 65534, 65525, 1, 65499, 65526, 1048582, 65501, 65526, 1048577, 65502, 65526, 6, 65503, 65526, 655363, 65504, 65526, 6, 65505, 65526, 1, 65507, 65526, 1441798, 65509, 65526, 1048577, 65510, 65526, 655365, 65511, 65526, 6, 65512, 65526, 1441797, 65514, 65526, 1441798, 65517, 65526, 1441798, 65520, 65526, 1048581, 65521, 65526, 6, 65522, 65526, 6, 65523, 65526, 1048579, 65524, 65526, 655366, 65525, 65526, 1, 65528, 65526, 655361, 65529, 65526, 5, 65530, 65526, 1441793, 65534, 65526, 1048582, 0, 65527, 1, 65499, 65527, 1048581, 65500, 65527, 6, 65501, 65527, 1441793, 65503, 65527, 1441798, 65505, 65527, 655361, 65506, 65527, 6, 65507, 65527, 655363, 65508, 65527, 6, 65509, 65527, 1441793, 65512, 65527, 1048581, 65513, 65527, 6, 65514, 65527, 3, 65515, 65527, 6, 65516, 65527, 6, 65517, 65527, 3, 65518, 65527, 6, 65519, 65527, 6, 65520, 65527, 1441793, 65523, 65527, 1441798, 65525, 65527, 1048582, 65529, 65527, 1048582, 65532, 65527, 1048577, 65533, 65527, 655366, 65534, 65527, 655365, 65535, 65527, 655366, 0, 65528, 1441798, 65499, 65528, 1048582, 65503, 65528, 1441798, 65507, 65528, 1441798, 65512, 65528, 1441798, 65514, 65528, 1441798, 65517, 65528, 1048582, 65522, 65528, 1048577, 65523, 65528, 1441793, 65525, 65528, 1048582, 65527, 65528, 1048577, 65528, 65528, 6, 65529, 65528, 655365, 65530, 65528, 5, 65531, 65528, 6, 65532, 65528, 1441797, 0, 65529, 1441798, 65497, 65529, 1048577, 65498, 65529, 6, 65499, 65529, 1048579, 65500, 65529, 655366, 65501, 65529, 655366, 65502, 65529, 5, 65503, 65529, 655365, 65504, 65529, 655366, 65505, 65529, 655366, 65506, 65529, 655366, 65507, 65529, 1048579, 65508, 65529, 655366, 65509, 65529, 655366, 65510, 65529, 5, 65511, 65529, 655366, 65512, 65529, 1441797, 65514, 65529, 1441798, 65516, 65529, 1048577, 65517, 65529, 655365, 65518, 65529, 6, 65519, 65529, 6, 65520, 65529, 1, 65522, 65529, 1048582, 65525, 65529, 1048582, 65527, 65529, 1048582, 65530, 65529, 1441798, 65532, 65529, 655361, 65533, 65529, 1, 0, 65530, 1441798, 65497, 65530, 1441798, 65499, 65530, 1048582, 65502, 65530, 1441798, 65507, 65530, 1048582, 65510, 65530, 1441798, 65512, 65530, 1441798, 65514, 65530, 655361, 65515, 65530, 5, 65516, 65530, 1441793, 65520, 65530, 1048581, 65521, 65530, 6, 65522, 65530, 3, 65523, 65530, 6, 65524, 65530, 6, 65525, 65530, 655365, 65526, 65530, 6, 65527, 65530, 1441797, 65530, 65530, 1441798, 65533, 65530, 1441798, 0, 65531, 1441798, 65497, 65531, 1441798, 65499, 65531, 1048582, 65502, 65531, 1441798, 65507, 65531, 1048582, 65510, 65531, 1441798, 65512, 65531, 1441798, 65515, 65531, 1441798, 65520, 65531, 1441798, 65522, 65531, 1441798, 65527, 65531, 1048582, 65530, 65531, 1441798, 65533, 65531, 1441798, 0, 65532, 1048579, 1, 65532, 6, 2, 65532, 5, 3, 65532, 6, 4, 65532, 6, 5, 65532, 1, 65497, 65532, 1441798, 65499, 65532, 655361, 65500, 65532, 655366, 65501, 65532, 655366, 65502, 65532, 655365, 65503, 65532, 655366, 65504, 65532, 5, 65505, 65532, 655366, 65506, 65532, 655366, 65507, 65532, 1441795, 65508, 65532, 6, 65509, 65532, 6, 65510, 65532, 655363, 65511, 65532, 6, 65512, 65532, 655365, 65513, 65532, 6, 65514, 65532, 5, 65515, 65532, 655365, 65516, 65532, 6, 65517, 65532, 5, 65518, 65532, 6, 65519, 65532, 5, 65520, 65532, 655365, 65521, 65532, 5, 65522, 65532, 655365, 65523, 65532, 6, 65524, 65532, 5, 65525, 65532, 655366, 65526, 65532, 655366, 65527, 65532, 655363, 65528, 65532, 655366, 65529, 65532, 655366, 65530, 65532, 1048579, 65531, 65532, 655366, 65532, 65532, 655366, 65533, 65532, 3, 65534, 65532, 655366, 65535, 65532, 655366, 0, 65533, 1048582, 2, 65533, 1441798, 5, 65533, 1441798, 65497, 65533, 1441798, 65504, 65533, 1441798, 65507, 65533, 1048582, 65510, 65533, 1441798, 65514, 65533, 1048582, 65517, 65533, 1048582, 65519, 65533, 1048582, 65521, 65533, 1441798, 65524, 65533, 1441798, 65527, 65533, 1048582, 65530, 65533, 1441798, 65533, 65533, 1048582, 0, 65534, 1048582, 2, 65534, 1441798, 5, 65534, 1441798, 65497, 65534, 1441798, 65504, 65534, 1441798, 65507, 65534, 1048582, 65510, 65534, 1441798, 65514, 65534, 1048582, 65517, 65534, 1048582, 65519, 65534, 1048582, 65521, 65534, 1048581, 65522, 65534, 655366, 65523, 65534, 655366, 65524, 65534, 1048579, 65525, 65534, 655366, 65526, 65534, 655366, 65527, 65534, 655363, 65528, 65534, 655366, 65529, 65534, 655366, 65530, 65534, 1441797, 65532, 65534, 1048577, 65533, 65534, 1441793, 0, 65535, 655365, 1, 65535, 5, 2, 65535, 1441793, 5, 65535, 655361, 6, 65535, 1, 65497, 65535, 1441798, 65499, 65535, 1048577, 65500, 65535, 655366, 65501, 65535, 655366, 65502, 65535, 655366, 65503, 65535, 655366, 65504, 65535, 655365, 65505, 65535, 655366, 65506, 65535, 655366, 65507, 65535, 1048579, 65508, 65535, 6, 65509, 65535, 6, 65510, 65535, 3, 65511, 65535, 6, 65512, 65535, 6, 65513, 65535, 655366, 65514, 65535, 1441797, 65516, 65535, 1048577, 65517, 65535, 655365, 65518, 65535, 5, 65519, 65535, 655365, 65520, 65535, 655366, 65521, 65535, 1441797, 65524, 65535, 1441798, 65527, 65535, 1048582, 65530, 65535, 1441798, 65532, 65535, 1048582, 65535, 65535, 1048577 )
+}
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true,
+"_editor_clip_": 0,
+"_editor_floor_": Vector3( 0, 0, 0 )
+}
+
+[node name="EDITOR_ONLY" type="StaticBody" parent="."]
+transform = Transform( 1000, 0, 0, 0, 1, 0, 0, 0, 1000, 0, 0, 0 )
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true
+}
+
+[node name="CollisionShape" type="CollisionShape" parent="EDITOR_ONLY"]
+shape = SubResource( 73 )
+
+[node name="ground" type="MeshInstance" parent="."]
+transform = Transform( 1000, 0, 0, 0, 1, 0, 0, 0, 1000, 0, 0, 0 )
+use_in_baked_light = true
+mesh = SubResource( 70 )
+material/0 = SubResource( 71 )
+__meta__ = {
+"_edit_group_": true,
+"_edit_lock_": true
+}
+
+[node name="deco" type="Spatial" parent="."]
+
+[node name="house1" parent="deco" instance=ExtResource( 14 )]
+transform = Transform( -0.7, 0, -1.19209e-07, 0, 0.7, 0, 1.19209e-07, 0, -0.7, -0.5, 0, 2.5 )
+use_in_baked_light = true
+
+[node name="house14" parent="deco" instance=ExtResource( 14 )]
+transform = Transform( -1.14044e-07, 0, 0.7, 0, 0.7, 0, -0.7, 0, -1.14044e-07, -8.5, 0, 1.5 )
+use_in_baked_light = true
+
+[node name="house27" parent="deco" instance=ExtResource( 14 )]
+transform = Transform( -1.14044e-07, 0, 0.7, 0, 0.7, 0, -0.7, 0, -1.14044e-07, -10.5, 0, 10.5 )
+use_in_baked_light = true
+
+[node name="house33" parent="deco" instance=ExtResource( 14 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -12.5, 0, 8.5 )
+use_in_baked_light = true
+
+[node name="house30" parent="deco" instance=ExtResource( 14 )]
+transform = Transform( 1.36295e-07, 0, -0.7, 0, 0.7, 0, 0.7, 0, 1.36295e-07, -9.5, 0, 11.5 )
+use_in_baked_light = true
+
+[node name="house15" parent="deco" instance=ExtResource( 14 )]
+transform = Transform( 1.36295e-07, 0, -0.7, 0, 0.7, 0, 0.7, 0, 1.36295e-07, -6.5, 0, -0.499999 )
+use_in_baked_light = true
+
+[node name="house25" parent="deco" instance=ExtResource( 14 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -4.5, 0, -6.5 )
+use_in_baked_light = true
+
+[node name="house10" parent="deco" instance=ExtResource( 14 )]
+transform = Transform( 0.7, 2.67496e-15, 5.80131e-08, -7.74662e-15, 0.7, 6.11959e-08, -5.80131e-08, -6.11959e-08, 0.7, -0.499999, 0, 8.5 )
+use_in_baked_light = true
+
+[node name="house2" parent="deco" instance=ExtResource( 12 )]
+transform = Transform( -0.7, 0, -1.19209e-07, 0, 0.7, 0, 1.19209e-07, 0, -0.7, -1.5, 0, 2.5 )
+use_in_baked_light = true
+
+[node name="house26" parent="deco" instance=ExtResource( 12 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -3.5, 0, -4.5 )
+use_in_baked_light = true
+
+[node name="house9" parent="deco" instance=ExtResource( 12 )]
+transform = Transform( -1.14044e-07, 0, 0.7, 0, 0.7, 0, -0.7, 0, -1.14044e-07, -1.5, 0, 7.5 )
+use_in_baked_light = true
+
+[node name="house28" parent="deco" instance=ExtResource( 12 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -10.5, 0, 12.5 )
+use_in_baked_light = true
+
+[node name="house16" parent="deco" instance=ExtResource( 11 )]
+transform = Transform( 1.36295e-07, 0, -0.7, 0, 0.7, 0, 0.7, 0, 1.36295e-07, -7.5, 0, 1.5 )
+use_in_baked_light = true
+
+[node name="house17" parent="deco" instance=ExtResource( 11 )]
+transform = Transform( -1.97491e-07, 0, 0.7, 0, 0.7, 0, -0.7, 0, -1.97491e-07, -7.5, 0, -0.499999 )
+use_in_baked_light = true
+
+[node name="house13" parent="deco" instance=ExtResource( 11 )]
+transform = Transform( -0.7, 0, -1.19209e-07, 0, 0.7, 0, 1.19209e-07, 0, -0.7, -6.5, 0, 10.5 )
+use_in_baked_light = true
+
+[node name="house7" parent="deco" instance=ExtResource( 11 )]
+transform = Transform( 0.7, 0, 1.78814e-07, 0, 0.7, 0, -1.78814e-07, 0, 0.7, -2.5, 0, 1.5 )
+use_in_baked_light = true
+
+[node name="house18" parent="deco" instance=ExtResource( 11 )]
+transform = Transform( 0.7, 0, 1.78814e-07, 0, 0.7, 0, -1.78814e-07, 0, 0.7, -9.5, 0, -0.499998 )
+use_in_baked_light = true
+
+[node name="house31" parent="deco" instance=ExtResource( 11 )]
+transform = Transform( 0.7, 0, 1.78814e-07, 0, 0.7, 0, -1.78814e-07, 0, 0.7, -15.5, 0, -2.5 )
+use_in_baked_light = true
+
+[node name="house32" parent="deco" instance=ExtResource( 11 )]
+transform = Transform( 1.36295e-07, 0, -0.7, 0, 0.7, 0, 0.7, 0, 1.36295e-07, -15.5, 0, -1.5 )
+use_in_baked_light = true
+
+[node name="house4" parent="deco" instance=ExtResource( 9 )]
+transform = Transform( 1.19209e-07, 0, -0.7, 0, 0.7, 0, 0.7, 0, 1.19209e-07, -1.5, 0, 5.5 )
+use_in_baked_light = true
+
+[node name="house29" parent="deco" instance=ExtResource( 9 )]
+transform = Transform( 0.7, 0, 1.49807e-07, 0, 0.7, 0, -1.49807e-07, 0, 0.7, -9.5, 0, 12.5 )
+use_in_baked_light = true
+
+[node name="house22" parent="deco" instance=ExtResource( 9 )]
+transform = Transform( 0.7, 0, 1.49807e-07, 0, 0.7, 0, -1.49807e-07, 0, 0.7, -9.5, 0, -2.5 )
+use_in_baked_light = true
+
+[node name="house23" parent="deco" instance=ExtResource( 9 )]
+transform = Transform( 0.7, 0, 1.49807e-07, 0, 0.7, 0, -1.49807e-07, 0, 0.7, -12.5, 0, -2.5 )
+use_in_baked_light = true
+
+[node name="house24" parent="deco" instance=ExtResource( 9 )]
+transform = Transform( 0.7, 0, 1.49807e-07, 0, 0.7, 0, -1.49807e-07, 0, 0.7, -6.5, 0, -2.5 )
+use_in_baked_light = true
+
+[node name="house5" parent="deco" instance=ExtResource( 13 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -0.500001, 0, 4.5 )
+use_in_baked_light = true
+
+[node name="house19" parent="deco" instance=ExtResource( 13 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -10.5, 0, 1.5 )
+use_in_baked_light = true
+
+[node name="house8" parent="deco" instance=ExtResource( 13 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -1.5, 0, 1.5 )
+use_in_baked_light = true
+
+[node name="house6" parent="deco" instance=ExtResource( 10 )]
+transform = Transform( 1.19209e-07, 0, -0.7, 0, 0.7, 0, 0.7, 0, 1.19209e-07, -3.53553, 0, 3.41421 )
+use_in_baked_light = true
+
+[node name="house20" parent="deco" instance=ExtResource( 10 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -10.5355, 0, 0.414211 )
+use_in_baked_light = true
+
+[node name="house21" parent="deco" instance=ExtResource( 10 )]
+transform = Transform( -1.14044e-07, 0, 0.7, 0, 0.7, 0, -0.7, 0, -1.14044e-07, -10.5355, 0, -0.585789 )
+use_in_baked_light = true
+
+[node name="house11" parent="deco" instance=ExtResource( 10 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -6.53553, 0, 7.41421 )
+use_in_baked_light = true
+
+[node name="house12" parent="deco" instance=ExtResource( 10 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -6.53553, 0, 8.41421 )
+use_in_baked_light = true
+
+[node name="house34" parent="deco" instance=ExtResource( 10 )]
+transform = Transform( -1.14044e-07, 0, 0.7, 0, 0.7, 0, -0.7, 0, -1.14044e-07, -12.5355, 0, 10.4142 )
+use_in_baked_light = true
+
+[node name="build1" parent="deco" instance=ExtResource( 8 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 8.5, 0, -2.5 )
+use_in_baked_light = true
+
+[node name="build13" parent="deco" instance=ExtResource( 8 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, -8.5, 0, 9 )
+use_in_baked_light = true
+
+[node name="build267" parent="deco" instance=ExtResource( 8 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -12, 0, 6.5 )
+use_in_baked_light = true
+
+[node name="build268" parent="deco" instance=ExtResource( 8 )]
+transform = Transform( -1.14044e-07, 0, 0.7, 0, 0.7, 0, -0.7, 0, -1.14044e-07, -10.5, 0, 6 )
+use_in_baked_light = true
+
+[node name="build21" parent="deco" instance=ExtResource( 8 )]
+transform = Transform( 0.7, 0, 4.17233e-08, 0, 0.7, 0, -4.17233e-08, 0, 0.7, -4, 0, 10.5 )
+use_in_baked_light = true
+
+[node name="build24" parent="deco" instance=ExtResource( 8 )]
+transform = Transform( 0.7, 0, 4.17233e-08, 0, 0.7, 0, -4.17233e-08, 0, 0.7, -12, 0, -4.5 )
+use_in_baked_light = true
+
+[node name="build29" parent="deco" instance=ExtResource( 8 )]
+transform = Transform( 5.28485e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, 5.28485e-08, -17.5, 0, -2 )
+use_in_baked_light = true
+
+[node name="build25" parent="deco" instance=ExtResource( 8 )]
+transform = Transform( 0.7, 0, 4.17233e-08, 0, 0.7, 0, -4.17233e-08, 0, 0.7, -10, 0, -4.5 )
+use_in_baked_light = true
+
+[node name="build16" parent="deco" instance=ExtResource( 8 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -4, 0, 5.5 )
+use_in_baked_light = true
+
+[node name="build7" parent="deco" instance=ExtResource( 8 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, -20.5, 0, 7.45058e-09 )
+use_in_baked_light = true
+
+[node name="build2" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -5.5, 0, 3.5 )
+use_in_baked_light = true
+
+[node name="build26" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -4.5, 0, -4.5 )
+use_in_baked_light = true
+
+[node name="build12" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -6.5, 0, 3.5 )
+use_in_baked_light = true
+
+[node name="build14" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -10.5, 0, 3.5 )
+use_in_baked_light = true
+
+[node name="build15" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -9.5, 0, 3.5 )
+use_in_baked_light = true
+
+[node name="build17" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -8.5, 0, 5.5 )
+use_in_baked_light = true
+
+[node name="build18" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -8.5, 0, 7.5 )
+use_in_baked_light = true
+
+[node name="build27" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -8.5, 0, 12.5 )
+use_in_baked_light = true
+
+[node name="build269" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -10.5, 0, 8.5 )
+use_in_baked_light = true
+
+[node name="build22" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -8.5, 0, 6.5 )
+use_in_baked_light = true
+
+[node name="build23" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -7.5, 0, 5.5 )
+use_in_baked_light = true
+
+[node name="build19" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -5.5, 0, 5.5 )
+use_in_baked_light = true
+
+[node name="build47" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -3, 0, 2.5 )
+use_in_baked_light = true
+
+[node name="build11" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 11.5, 0, -1 )
+use_in_baked_light = true
+
+[node name="build8" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -20.5, 0, -2.5 )
+use_in_baked_light = true
+
+[node name="build9" parent="deco" instance=ExtResource( 7 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -19.5, 0, -2.5 )
+use_in_baked_light = true
+
+[node name="build3" parent="deco" instance=ExtResource( 22 )]
+transform = Transform( 0.66, 0, 0, 0, 0.66, 0, 0, 0, 0.66, 9, 0, 0.5 )
+use_in_baked_light = true
+
+[node name="build10" parent="deco" instance=ExtResource( 22 )]
+transform = Transform( -2.88495e-08, 0, 0.66, 0, 0.66, 0, -0.66, 0, -2.88495e-08, -5.5, 0, 1.5 )
+use_in_baked_light = true
+
+[node name="build20" parent="deco" instance=ExtResource( 22 )]
+transform = Transform( -1.07528e-07, 0, -0.66, 0, 0.66, 0, 0.66, 0, -1.07528e-07, -4, 0, 8.5 )
+use_in_baked_light = true
+
+[node name="build28" parent="deco" instance=ExtResource( 22 )]
+transform = Transform( 0.66, 0, -7.86781e-08, 0, 0.66, 0, 7.86781e-08, 0, 0.66, -7, 0, 13 )
+use_in_baked_light = true
+
+[node name="build4" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 11, 0, 2 )
+use_in_baked_light = true
+
+[node name="build34" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -21.5, 0, -13.5 )
+use_in_baked_light = true
+
+[node name="build57" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -23.5, 0, -16.5 )
+use_in_baked_light = true
+
+[node name="build38" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -35.5, 0, -1.5 )
+use_in_baked_light = true
+
+[node name="build50" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -29, 0, 4 )
+use_in_baked_light = true
+
+[node name="build48" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -37.5, 0, -4.5 )
+use_in_baked_light = true
+
+[node name="build39" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -33.5, 0, -2.5 )
+use_in_baked_light = true
+
+[node name="build43" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -36.5, 0, -2.5 )
+use_in_baked_light = true
+
+[node name="build35" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -19.5, 0, -13.5 )
+use_in_baked_light = true
+
+[node name="build6" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 11, 0, 4 )
+use_in_baked_light = true
+
+[node name="build31" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -21.5, 0, -14.5 )
+use_in_baked_light = true
+
+[node name="build55" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -25.5, 0, -16.5 )
+use_in_baked_light = true
+
+[node name="build32" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -20.5, 0, -12.5 )
+use_in_baked_light = true
+
+[node name="build36" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -32.5, 0, -1.5 )
+use_in_baked_light = true
+
+[node name="build51" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -35.5, 0, 0.5 )
+use_in_baked_light = true
+
+[node name="build52" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -29.5, 0, 0.5 )
+use_in_baked_light = true
+
+[node name="build53" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -32.5, 0, 0.5 )
+use_in_baked_light = true
+
+[node name="build45" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -37.5, 0, -1.5 )
+use_in_baked_light = true
+
+[node name="build46" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -37.5, 0, 0.5 )
+use_in_baked_light = true
+
+[node name="build37" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -35.5, 0, -2.5 )
+use_in_baked_light = true
+
+[node name="tree1" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 9, 0, -0.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree4" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -9.13857, 0, 3.90253 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree179" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.0666, 0, 3.22108 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree267" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.025, 0, 4.05487 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree6" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.96984, 0, -4.67157 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree68" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -8.02257, 0, -5.04064 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree69" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.71281, 0, -5.36358 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree78" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.60521, 0, -5.71327 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree80" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.37681, 0, -6.58301 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree81" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.37209, 0, -3.99171 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree82" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.60097, 0, -6.00916 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree70" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -8.081, 0, -5.39653 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree71" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.99532, 0, -5.74583 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree72" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.72511, 0, -6.09513 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree73" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -8.09418, 0, -6.09513 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree74" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.92941, 0, -6.67511 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree75" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.92941, 0, -6.37194 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree76" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.48784, 0, -6.72124 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree77" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.56034, 0, -6.40489 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree79" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.27462, 0, -6.20119 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree56" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.92194, 0, -4.04546 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree57" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.49355, 0, -4.1575 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree58" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.37492, 0, -4.55293 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree83" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -4.93183, 0, -5.65253 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree84" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -4.04966, 0, -5.68099 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree85" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -3.38091, 0, -4.98379 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree86" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -4.2204, 0, -5.12608 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree87" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -4.88915, 0, -4.92688 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree59" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.33537, 0, -5.73265 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree60" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.57263, 0, -5.40312 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree61" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.77694, 0, -5.11973 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree62" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.02739, 0, -4.75724 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree63" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.27124, 0, -4.36181 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree64" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.86921, 0, -4.41453 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree65" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.64513, 0, -4.76383 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree66" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.36174, 0, -4.98132 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree67" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.23651, 0, -5.37676 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree5" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.22449, 0, 3.93314 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree7" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -4.86075, 0, 7.40685 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree10" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -8.42534, 0, 6.1562 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree11" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -8.96461, 0, 6.12923 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree12" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -8.74498, 0, 7.12279 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree280" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.9527, 0, 7.02307 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree302" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.3128, 0, 7.00644 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree303" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.6286, 0, 6.99813 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree13" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -8.27141, 0, 8.06223 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree270" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.67169, 0, 9.55428 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree14" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -8.66632, 0, 8.22092 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree15" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -9.04828, 0, 8.0745 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree19" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.9686, 0, 14.3153 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree20" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -9.42999, 0, 14.4143 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree21" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -9.3636, 0, 16.8373 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree22" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.9194, 0, 16.8871 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree23" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.9028, 0, 16.1071 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree24" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.8696, 0, 15.2441 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree25" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -9.41339, 0, 15.1279 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree26" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -9.36361, 0, 16.0905 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree43" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -9.69553, 0, 14.879 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree44" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -9.8283, 0, 14.5138 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree45" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.21, 0, 14.3313 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree90" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -8.68344, 0, 11.7706 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree91" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.3249, 0, 11.2946 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree92" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.4398, 0, 12.0408 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree93" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.8994, 0, 11.6468 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree304" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.9521, 0, 10.0161 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree305" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.5565, 0, 10.0952 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree306" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.2664, 0, 9.76549 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree307" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.2268, 0, 9.04018 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree94" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.9336, 0, 12.3527 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree95" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.8515, 0, 12.9272 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree96" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.359, 0, 12.4676 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree88" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.1479, 0, 14.7042 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree27" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.1768, 0, 16.9203 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree28" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.1062, 0, 16.8705 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree29" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.4215, 0, 16.4058 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree30" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.8364, 0, 16.4888 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree31" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.4879, 0, 16.7875 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree32" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -9.77851, 0, 16.7875 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree33" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -9.51297, 0, 16.4224 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree34" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.0606, 0, 16.4888 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree35" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -9.77851, 0, 16.1569 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree36" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -9.33041, 0, 14.7628 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree37" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.9658, 0, 14.7302 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree101" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.2997, 0, 4.64781 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree102" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.6134, 0, 4.7564 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree103" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.9754, 0, 4.94945 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree104" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -23.3011, 0, 5.22695 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree116" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -24.2944, 0, 4.25143 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree145" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -34.9773, 0, -1.07481 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree146" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -34.9659, 0, -1.6572 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree151" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -38.0034, 0, -0.675127 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree152" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -37.6494, 0, -0.286865 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree153" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -37.3754, 0, -0.652288 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree154" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -37.3069, 0, -0.0242174 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree155" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -37.9692, 0, 0.0100412 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree156" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -37.638, 0, -3.0618 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree157" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -38.0149, 0, -3.40438 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree158" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -37.6176, 0, -3.74451 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree159" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -37.3664, 0, -3.36766 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree160" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -37.8559, 0, -5.59007 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree161" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -37.4056, 0, -5.53133 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree162" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -37.7091, 0, -5.10056 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree147" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -35.023, 0, -2.1825 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree148" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -34.3949, 0, -2.65069 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree149" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -34.2921, 0, -2.23063 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree150" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -34.3149, 0, -1.14578 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree186" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -30.8239, 0, -1.15477 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree187" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -30.4373, 0, -2.65619 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree188" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.4304, 0, -2.27859 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree189" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.3765, 0, -1.29862 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree192" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -27.3086, 0, -2.62023 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree193" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -26.3916, 0, -2.0808 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree194" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -26.8681, 0, -1.11881 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree195" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -27.929, 0, -1.66723 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree190" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.8799, 0, -1.05588 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree191" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -30.9228, 0, -2.26061 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree117" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -24.0816, 0, 4.58843 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree118" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -23.8244, 0, 4.84561 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree119" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -23.6559, 0, 5.22695 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree120" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -23.4696, 0, 4.92542 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree121" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -23.2923, 0, 4.69485 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree122" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -23.9131, 0, 4.2869 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree123" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -23.6647, 0, 4.61503 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree124" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -23.5406, 0, 4.34898 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree125" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -23.2036, 0, 4.26916 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree126" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.973, 0, 4.56182 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree127" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.7956, 0, 4.30464 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree128" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.4054, 0, 4.29577 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree105" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.2891, 0, 5.0339 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree106" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.639, 0, 5.11836 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree107" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.958, 0, 5.30466 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree108" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.3547, 0, 5.41325 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree109" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.6805, 0, 5.50977 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree167" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.939, 0, 3.37765 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree168" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.3633, 0, 3.29849 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree169" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.6152, 0, 3.62232 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree170" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.3057, 0, 3.98213 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree171" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.8814, 0, 3.98213 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree172" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.5576, 0, 4.19802 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree173" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.3201, 0, 4.59381 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree174" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.9966, 0, 4.40671 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree175" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.7015, 0, 4.67297 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree176" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -13.0038, 0, 4.97521 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree177" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -12.3993, 0, 4.96082 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree110" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.3427, 0, 6.95762 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree111" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.7529, 0, 6.89729 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree112" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -23.0929, 0, 7.03315 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree253" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.982, 0, 17.2942 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree254" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.9951, 0, 17.6601 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree255" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.9885, 0, 17.9998 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree256" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.2925, 0, 17.2711 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree257" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.3317, 0, 17.6304 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree258" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.2991, 0, 17.9832 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree259" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -27.9303, 0, 15.9479 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree260" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.0014, 0, 15.6256 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree262" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -27.9481, 0, 15.279 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree263" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -27.9659, 0, 14.9212 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree264" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.0014, 0, 14.5657 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree265" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.037, 0, 14.2546 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree266" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.4949, 0, 14.0184 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree296" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.1748, 0, 13.94 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree297" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.7366, 0, 13.5023 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree298" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.7236, 0, 13.2148 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree299" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.41, 0, 13.3716 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree300" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.1421, 0, 13.2344 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree301" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.1487, 0, 13.5807 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree281" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -30.0171, 0, 13.254 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree282" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.9125, 0, 13.5676 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree283" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -30.0105, 0, 13.8716 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree284" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.7362, 0, 13.9957 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree285" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.612, 0, 13.7048 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree286" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.6578, 0, 13.3716 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree287" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.3377, 0, 13.5023 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree288" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.3899, 0, 13.2148 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree289" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.0567, 0, 13.3063 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree290" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.0371, 0, 13.6329 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree291" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.7628, 0, 13.842 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree292" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.4818, 0, 13.6852 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree293" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.2889, 0, 13.7832 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree294" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.0406, 0, 13.9596 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree295" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -29.3999, 0, 14.0576 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree269" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -26.2772, 0, 15.9278 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree271" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -26.2416, 0, 15.6079 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree272" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -26.2861, 0, 15.2968 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree273" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -26.3838, 0, 14.9857 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree274" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -26.3216, 0, 14.648 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree275" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -26.295, 0, 14.2747 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree276" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -26.2594, 0, 13.9992 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree277" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -26.3051, 0, 13.679 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree278" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -26.5207, 0, 13.4177 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree279" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -26.2167, 0, 13.2348 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree308" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -17.9457, 0, 7.92412 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree309" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -16.3709, 0, 7.93243 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree310" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -16.3293, 0, 6.3036 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree311" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -17.9166, 0, 6.32853 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree142" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -23.0052, 0, 6.67353 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree143" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -23.2157, 0, 6.4367 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree144" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -23.2069, 0, 5.54202 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree129" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -25.0423, 0, 4.8768 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree197" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -35.9601, 0, 2.33701 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree239" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -35.6962, 0, 2.23245 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree240" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -35.3825, 0, 2.37186 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree241" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -35.0689, 0, 2.3868 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree242" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -34.956, 0, 0.343096 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree243" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -34.8181, 0, 0.706699 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree244" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -35.0313, 0, 0.995074 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree245" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -33.2885, 0, 0.305481 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree246" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -33.5016, 0, 0.681623 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree247" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -33.2759, 0, 1.00761 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree248" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -32.019, 0, 0.311589 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree249" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -31.8564, 0, 0.58932 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree250" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -32.0055, 0, 0.941564 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree251" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -30.4542, 0, 0.426746 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree252" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -30.2984, 0, 0.894146 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree198" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -35.6341, 0, 2.57523 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree199" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -35.2705, 0, 2.67553 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree200" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -34.8818, 0, 2.70061 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree201" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -34.5057, 0, 2.83853 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree202" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -34.1923, 0, 3.0266 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree203" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -34.7545, 0, 3.03337 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree204" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -35.1203, 0, 2.95886 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree205" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -35.5132, 0, 2.8708 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree206" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -35.3438, 0, 3.10789 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree207" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -35.7638, 0, 3.05369 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree208" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -35.9331, 0, 2.66758 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree209" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -36.0619, 0, 2.96563 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree210" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -33.6097, 0, 2.22728 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree211" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -33.1965, 0, 2.49146 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree230" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -33.5013, 0, 2.51178 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree212" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -33.1016, 0, 2.80983 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree231" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -32.1398, 0, 2.86402 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree232" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -31.8078, 0, 3.05369 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree233" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -31.8485, 0, 2.76919 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree234" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -30.9814, 0, 4.62524 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree235" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -30.724, 0, 4.98426 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree236" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.597, 0, 4.99103 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree237" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.3125, 0, 4.61169 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree238" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -28.3193, 0, 3.37884 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree213" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -32.7697, 0, 2.89112 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree214" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -32.4175, 0, 2.99273 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree215" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -31.6317, 0, 2.28824 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree216" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -31.3201, 0, 2.54565 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree217" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -31.144, 0, 2.8708 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree218" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -31.0424, 0, 3.22177 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree219" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -31.4759, 0, 2.97791 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree220" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -31.6046, 0, 2.5918 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree221" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -31.9162, 0, 2.4631 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree222" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -32.282, 0, 2.29375 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree223" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -31.984, 0, 2.18536 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree224" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -32.2075, 0, 2.57148 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree225" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -32.492, 0, 2.69341 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree226" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -32.6072, 0, 2.40213 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree227" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -32.9188, 0, 2.2802 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree228" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -33.2371, 0, 2.20569 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree229" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -32.8713, 0, 2.58503 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree130" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -24.7009, 0, 5.14574 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree131" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -25.0526, 0, 5.21815 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree132" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -24.6803, 0, 5.49744 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree133" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -25.032, 0, 5.59054 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree134" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -25.0216, 0, 6.94562 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree135" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -24.794, 0, 6.60426 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree136" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -24.5872, 0, 6.22153 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree137" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -24.2113, 0, 6.30428 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree141" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -24.0885, 0, 5.98851 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree138" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -24.1285, 0, 6.7077 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree139" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -24.4699, 0, 6.57323 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree140" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -24.594, 0, 6.93527 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree113" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.7512, 0, 6.47695 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree114" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.2992, 0, 6.34514 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree115" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -22.4486, 0, 6.64414 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree38" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.5052, 0, 14.3215 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree39" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.2404, 0, 14.6492 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree40" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.0564, 0, 15.3768 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree41" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.4547, 0, 15.2275 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree46" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.2808, 0, 15.6116 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree89" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.1187, 0, 15.0116 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree47" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.5054, 0, 16.046 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree42" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -11.5862, 0, 14.8485 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree16" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -5.14728, 0, 5.9619 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree268" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -5.1319, 0, 5.31586 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree18" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -1.27585, 0, 4.46718 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree261" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -1.96822, 0, 4.98143 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree17" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -8.16772, 0, 3.381 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree178" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -8.10638, 0, 3.95191 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree183" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -3.93767, 0, 2.29642 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree184" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -3.44844, 0, 1.50142 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree185" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -2.46997, 0, 2.58996 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree180" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -9.1387, 0, 3.36174 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree181" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.16693, 0, 3.26099 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree182" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.14355, 0, 3.91821 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree196" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -6.14355, 0, 3.27216 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree48" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.92079, 0, -2.65239 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree49" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -7.40148, 0, -2.13308 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree50" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.9238, 0, -2.13308 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree51" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.9915, 0, -2.65239 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree52" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -10.2916, 0, -2.40403 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree53" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -13.2946, 0, -2.06534 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree97" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -15.1658, 0, -1.87911 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree98" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -16.1147, 0, -1.87911 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree54" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -13.3398, 0, -2.6524 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree55" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -13.9268, 0, -2.40403 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree99" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -14.9027, 0, -4.06088 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree100" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -14.3959, 0, -4.59175 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree8" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -3.4157, 0, 7.47459 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree9" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -3.4157, 0, 7.47459 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree2" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -20.9262, 0, -0.834669 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree3" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -20.346, 0, -0.96842 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree163" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -20.6914, 0, -1.21309 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree164" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -19.3313, 0, -1.83196 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree165" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -19.6839, 0, -1.68804 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="tree166" parent="deco" instance=ExtResource( 21 )]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, -19.3817, 0, -1.3786 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build5" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 11, 0, 3 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build30" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -20.5, 0, -14.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build56" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -24.5, 0, -16.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build58" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -20.5, 0, -16.5 )
+use_in_baked_light = true
+
+[node name="build59" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -22.5, 0, -16.5 )
+use_in_baked_light = true
+
+[node name="build60" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -21.5, 0, -16.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build70" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -20.5, 0, -17.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build171" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -16.5, 0, -17.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build172" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -13.5, 0, -16.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build61" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -17.5, 0, -17.5 )
+use_in_baked_light = true
+
+[node name="build62" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -19.5, 0, -17.5 )
+use_in_baked_light = true
+
+[node name="build63" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -18.5, 0, -17.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build64" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -14.5, 0, -16.5 )
+use_in_baked_light = true
+
+[node name="build65" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -16.5, 0, -16.5 )
+use_in_baked_light = true
+
+[node name="build66" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -15.5, 0, -16.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build71" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -11.5, 0, -12.5 )
+use_in_baked_light = true
+
+[node name="build72" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -1.14044e-07, 0, 0.7, 0, 0.7, 0, -0.7, 0, -1.14044e-07, -13.5, 0, -12.5 )
+use_in_baked_light = true
+
+[node name="build73" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -12.5, 0, -12.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build174" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -6.5, 0, -12.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build74" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -8.5, 0, -12.5 )
+use_in_baked_light = true
+
+[node name="build75" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -10.5, 0, -12.5 )
+use_in_baked_light = true
+
+[node name="build173" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -7.5, 0, -12.5 )
+use_in_baked_light = true
+
+[node name="build76" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -9.5, 0, -12.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build77" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -3.5, 0, -11.5 )
+use_in_baked_light = true
+
+[node name="build175" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, -6.5, 0, -11.5 )
+use_in_baked_light = true
+
+[node name="build78" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -5.5, 0, -11.5 )
+use_in_baked_light = true
+
+[node name="build79" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -4.5, 0, -11.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build80" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -0.5, 0, -11.5 )
+use_in_baked_light = true
+
+[node name="build81" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -2.5, 0, -11.5 )
+use_in_baked_light = true
+
+[node name="build178" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 1.5, 0, -8.5 )
+use_in_baked_light = true
+
+[node name="build176" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -6.5, 0, -10.5 )
+use_in_baked_light = true
+
+[node name="build82" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -1.5, 0, -11.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build177" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, -0.5, 0, -10.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build83" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 1.5, 0, -9.5 )
+use_in_baked_light = true
+
+[node name="build181" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 1.5, 0, -6.5 )
+use_in_baked_light = true
+
+[node name="build84" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, -0.5, 0, -9.5 )
+use_in_baked_light = true
+
+[node name="build85" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, 0.5, 0, -9.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build179" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 1.5, 0, -7.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build180" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 1.5, 0, -5.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build86" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, 3.5, 0, -4.5 )
+use_in_baked_light = true
+
+[node name="build87" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, 1.5, 0, -4.5 )
+use_in_baked_light = true
+
+[node name="build88" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, 2.5, 0, -4.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build182" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 6.5, 0, -4.5 )
+use_in_baked_light = true
+
+[node name="build187" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 6.5, 0, -1.5 )
+use_in_baked_light = true
+
+[node name="build190" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 7.5, 0, 0.5 )
+use_in_baked_light = true
+
+[node name="build183" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, 4.5, 0, -4.5 )
+use_in_baked_light = true
+
+[node name="build185" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 6.5, 0, -3.5 )
+use_in_baked_light = true
+
+[node name="build188" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 7.5, 0, -1.5 )
+use_in_baked_light = true
+
+[node name="build184" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, 5.5, 0, -4.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build186" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 6.5, 0, -2.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build189" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 7.5, 0, -0.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build191" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 7.5, 0, 3.5 )
+use_in_baked_light = true
+
+[node name="build192" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 7.5, 0, 1.5 )
+use_in_baked_light = true
+
+[node name="build193" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 7.5, 0, 2.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build194" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 9.5, 0, 7.5 )
+use_in_baked_light = true
+
+[node name="build195" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 9.5, 0, 5.5 )
+use_in_baked_light = true
+
+[node name="build196" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 9.5, 0, 6.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build197" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 9.5, 0, 10.5 )
+use_in_baked_light = true
+
+[node name="build198" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 9.5, 0, 8.5 )
+use_in_baked_light = true
+
+[node name="build199" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 9.5, 0, 9.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build206" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 8.5, 0, 10.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build200" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 7.5, 0, 12.5 )
+use_in_baked_light = true
+
+[node name="build201" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 7.5, 0, 10.5 )
+use_in_baked_light = true
+
+[node name="build202" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 7.5, 0, 11.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build204" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 7.5, 0, 13.5 )
+use_in_baked_light = true
+
+[node name="build205" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 7.5, 0, 14.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build89" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 9.5, 0, 4.5 )
+use_in_baked_light = true
+
+[node name="build90" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, 7.5, 0, 4.5 )
+use_in_baked_light = true
+
+[node name="build91" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, 8.5, 0, 4.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build92" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 6.5, 0, 14.5 )
+use_in_baked_light = true
+
+[node name="build213" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 5.28485e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, 5.28485e-08, 4.5, 0, 18.5 )
+use_in_baked_light = true
+
+[node name="build93" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 4.5, 0, 14.5 )
+use_in_baked_light = true
+
+[node name="build212" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 5.28485e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, 5.28485e-08, 4.5, 0, 17.5 )
+use_in_baked_light = true
+
+[node name="build94" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 5.5, 0, 14.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build210" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 5.28485e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, 5.28485e-08, 4.5, 0, 16.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build211" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 4.5, 0, 19.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build95" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 3.5, 0, 19.5 )
+use_in_baked_light = true
+
+[node name="build209" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 5.28485e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, 5.28485e-08, 4.5, 0, 15.5 )
+use_in_baked_light = true
+
+[node name="build96" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 1.5, 0, 19.5 )
+use_in_baked_light = true
+
+[node name="build208" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 5.28485e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, 5.28485e-08, 0.5, 0, 21.5 )
+use_in_baked_light = true
+
+[node name="build97" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 2.5, 0, 19.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build207" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 5.28485e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, 5.28485e-08, 0.5, 0, 20.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build98" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 0.5, 0, 22.5 )
+use_in_baked_light = true
+
+[node name="build203" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, 1.5, 0, 20.5 )
+use_in_baked_light = true
+
+[node name="build99" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -1.5, 0, 22.5 )
+use_in_baked_light = true
+
+[node name="build216" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -5.5, 0, 24.5 )
+use_in_baked_light = true
+
+[node name="build218" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -6.5, 0, 25.5 )
+use_in_baked_light = true
+
+[node name="build220" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -7.5, 0, 26.5 )
+use_in_baked_light = true
+
+[node name="build100" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -0.5, 0, 22.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build101" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -2.5, 0, 22.5 )
+use_in_baked_light = true
+
+[node name="build215" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -4.5, 0, 23.5 )
+use_in_baked_light = true
+
+[node name="build217" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -6.5, 0, 24.5 )
+use_in_baked_light = true
+
+[node name="build102" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -4.5, 0, 22.5 )
+use_in_baked_light = true
+
+[node name="build103" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -3.5, 0, 22.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build214" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -4.5, 0, 24.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build219" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -7.5, 0, 25.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build104" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -8.5, 0, 26.5 )
+use_in_baked_light = true
+
+[node name="build105" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -10.5, 0, 26.5 )
+use_in_baked_light = true
+
+[node name="build106" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -9.5, 0, 26.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build107" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -12.5, 0, 26.5 )
+use_in_baked_light = true
+
+[node name="build221" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -11.5, 0, 25.5 )
+use_in_baked_light = true
+
+[node name="build108" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -14.5, 0, 26.5 )
+use_in_baked_light = true
+
+[node name="build223" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -11.5, 0, 24.5 )
+use_in_baked_light = true
+
+[node name="build109" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -13.5, 0, 26.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build224" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -15.5, 0, 26.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build222" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -11.5, 0, 26.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build110" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -15.5, 0, 24.5 )
+use_in_baked_light = true
+
+[node name="build111" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -17.5, 0, 24.5 )
+use_in_baked_light = true
+
+[node name="build225" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -15.5, 0, 25.5 )
+use_in_baked_light = true
+
+[node name="build112" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -16.5, 0, 24.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build113" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -17.5, 0, 22.5 )
+use_in_baked_light = true
+
+[node name="build114" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -19.5, 0, 22.5 )
+use_in_baked_light = true
+
+[node name="build227" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -20.5, 0, 21.5 )
+use_in_baked_light = true
+
+[node name="build115" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -18.5, 0, 22.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build226" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -17.5, 0, 23.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build116" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -20.5, 0, 20.5 )
+use_in_baked_light = true
+
+[node name="build230" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -23.5, 0, 20.5 )
+use_in_baked_light = true
+
+[node name="build117" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -22.5, 0, 20.5 )
+use_in_baked_light = true
+
+[node name="build229" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -24.5, 0, 20.5 )
+use_in_baked_light = true
+
+[node name="build118" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -21.5, 0, 20.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build228" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -20.5, 0, 22.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build119" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -24.5, 0, 19.5 )
+use_in_baked_light = true
+
+[node name="build120" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -26.5, 0, 19.5 )
+use_in_baked_light = true
+
+[node name="build235" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -27.5, 0, 19.5 )
+use_in_baked_light = true
+
+[node name="build231" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -27.5, 0, 17.5 )
+use_in_baked_light = true
+
+[node name="build121" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -25.5, 0, 19.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build233" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -26.5, 0, 17.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build234" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -27.5, 0, 18.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build122" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -28.5, 0, 19.5 )
+use_in_baked_light = true
+
+[node name="build238" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -31.5, 0, 17.5 )
+use_in_baked_light = true
+
+[node name="build239" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -31.5, 0, 15.5 )
+use_in_baked_light = true
+
+[node name="build244" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -34.5, 0, 12.5 )
+use_in_baked_light = true
+
+[node name="build248" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -34.5, 0, 7.5 )
+use_in_baked_light = true
+
+[node name="build245" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -34.5, 0, 9.5 )
+use_in_baked_light = true
+
+[node name="build232" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -26.5, 0, 18.5 )
+use_in_baked_light = true
+
+[node name="build123" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -30.5, 0, 19.5 )
+use_in_baked_light = true
+
+[node name="build236" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -31.5, 0, 18.5 )
+use_in_baked_light = true
+
+[node name="build240" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -31.5, 0, 14.5 )
+use_in_baked_light = true
+
+[node name="build124" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -29.5, 0, 19.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build237" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -31.5, 0, 19.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build241" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -31.5, 0, 16.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build125" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -31.5, 0, 13.5 )
+use_in_baked_light = true
+
+[node name="build126" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -33.5, 0, 13.5 )
+use_in_baked_light = true
+
+[node name="build247" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -34.5, 0, 8.5 )
+use_in_baked_light = true
+
+[node name="build242" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -34.5, 0, 11.5 )
+use_in_baked_light = true
+
+[node name="build250" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -34.5, 0, 5.5 )
+use_in_baked_light = true
+
+[node name="build127" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -32.5, 0, 13.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build243" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -34.4739, 0, 13.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build249" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -34.4739, 0, 6.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build252" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -37.4739, 0, 3.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build246" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -34.4739, 0, 10.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build128" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -34.5, 0, 4.5 )
+use_in_baked_light = true
+
+[node name="build253" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -39.5, 0, 1.5 )
+use_in_baked_light = true
+
+[node name="build260" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -39.5, 0, -5.5 )
+use_in_baked_light = true
+
+[node name="build264" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -37.5, 0, -10.5 )
+use_in_baked_light = true
+
+[node name="build256" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -39.5, 0, -1.5 )
+use_in_baked_light = true
+
+[node name="build129" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -36.5, 0, 4.5 )
+use_in_baked_light = true
+
+[node name="build130" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -35.5, 0, 4.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build131" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -37.5, 0, 2.5 )
+use_in_baked_light = true
+
+[node name="build251" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -37.5, 0, 4.5 )
+use_in_baked_light = true
+
+[node name="build132" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -39.5, 0, 2.5 )
+use_in_baked_light = true
+
+[node name="build255" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -39.5, 0, -0.5 )
+use_in_baked_light = true
+
+[node name="build259" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -39.5, 0, -3.5 )
+use_in_baked_light = true
+
+[node name="build262" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -37.5, 0, -8.5 )
+use_in_baked_light = true
+
+[node name="build133" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -38.5, 0, 2.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build254" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -39.5, 0, 0.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build258" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -39.5, 0, -4.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build257" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -39.5, 0, -2.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build261" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -39.5, 0, -6.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build134" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -33.5, 0, -10.5 )
+use_in_baked_light = true
+
+[node name="build135" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -35.5, 0, -10.5 )
+use_in_baked_light = true
+
+[node name="build136" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -34.5, 0, -10.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build137" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -37.5, 0, -7.5 )
+use_in_baked_light = true
+
+[node name="build266" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -37.5, 0, -12.5 )
+use_in_baked_light = true
+
+[node name="build138" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -39.5, 0, -7.5 )
+use_in_baked_light = true
+
+[node name="build265" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -37.5, 0, -11.5 )
+use_in_baked_light = true
+
+[node name="build139" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -38.5, 0, -7.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build263" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -37.5, 0, -9.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build140" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -31.5, 0, -12.5 )
+use_in_baked_light = true
+
+[node name="build141" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -33.5, 0, -12.5 )
+use_in_baked_light = true
+
+[node name="build142" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -32.5, 0, -12.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build143" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -34.5, 0, -12.5 )
+use_in_baked_light = true
+
+[node name="build144" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -36.5, 0, -12.5 )
+use_in_baked_light = true
+
+[node name="build145" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -35.5, 0, -12.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build164" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -38.5, 0, -14.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build146" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -27.5, 0, -16.5 )
+use_in_baked_light = true
+
+[node name="build169" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -26.5, 0, -15.5 )
+use_in_baked_light = true
+
+[node name="build147" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -29.5, 0, -16.5 )
+use_in_baked_light = true
+
+[node name="build168" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -26.5, 0, -14.5 )
+use_in_baked_light = true
+
+[node name="build148" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -28.5, 0, -16.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build170" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -26.5, 0, -16.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build149" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -30.5, 0, -16.5 )
+use_in_baked_light = true
+
+[node name="build150" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -32.5, 0, -16.5 )
+use_in_baked_light = true
+
+[node name="build151" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -31.5, 0, -16.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build152" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -32.5, 0, -17.5 )
+use_in_baked_light = true
+
+[node name="build153" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -34.5, 0, -17.5 )
+use_in_baked_light = true
+
+[node name="build154" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -33.5, 0, -17.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build155" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -35.5, 0, -17.5 )
+use_in_baked_light = true
+
+[node name="build167" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -38.5, 0, -17.5 )
+use_in_baked_light = true
+
+[node name="build156" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -37.5, 0, -17.5 )
+use_in_baked_light = true
+
+[node name="build157" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -36.5, 0, -17.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build166" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -38.5, 0, -16.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build158" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -33.5, 0, -13.5 )
+use_in_baked_light = true
+
+[node name="build159" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -35.5, 0, -13.5 )
+use_in_baked_light = true
+
+[node name="build160" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -34.5, 0, -13.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build161" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -36.5, 0, -13.5 )
+use_in_baked_light = true
+
+[node name="build165" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, -0.7, 0, 0.7, 0, 0.7, 0, -3.0598e-08, -38.5, 0, -15.5 )
+use_in_baked_light = true
+
+[node name="build162" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -38.5, 0, -13.5 )
+use_in_baked_light = true
+
+[node name="build163" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -37.5, 0, -13.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build67" parent="deco" instance=ExtResource( 16 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, -13.5, 0, -13.5 )
+use_in_baked_light = true
+
+[node name="build68" parent="deco" instance=ExtResource( 17 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, -13.5, 0, -15.5 )
+use_in_baked_light = true
+
+[node name="build69" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -3.0598e-08, 0, 0.7, 0, 0.7, 0, -0.7, 0, -3.0598e-08, -13.5, 0, -14.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build33" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -19.5, 0, -12.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build40" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -33.5, 0, -1.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build42" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -36.5, 0, -1.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build49" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -30, 0, 4 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build54" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( -0.7, 0, -1.05697e-07, 0, 0.7, 0, 1.05697e-07, 0, -0.7, -30, 0, -2 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build41" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -32.5, 0, -2.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="build44" parent="deco" instance=ExtResource( 19 )]
+transform = Transform( 0.7, 0, 0, 0, 0.7, 0, 0, 0, 0.7, -37.5, 0, -2.5 )
+use_in_baked_light = true
+skeleton = NodePath("../..")
+
+[node name="dirt" type="MeshInstance" parent="deco"]
+transform = Transform( 0.270914, 0, -0.755668, 0, 1, 0, 0.108956, 0, 1.87893, -7.11981, 0.005, -5.53387 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt31" type="MeshInstance" parent="deco"]
+transform = Transform( -0.0256426, 0, -0.706625, 0, 1, 0, 0.290875, 0, -0.0622939, -7.46173, 0.005, 0.520836 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt3" type="MeshInstance" parent="deco"]
+transform = Transform( 0.256217, 0, 0.538625, 0, 1, 0, -0.140066, 0, 0.985288, -10.7898, 0.005, 14.1232 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt17" type="MeshInstance" parent="deco"]
+transform = Transform( -0.0348476, 0, 1.11488, 0, 1, 0, -0.289916, 0, -0.134007, -22.3316, 0.005, 5.79321 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt57" type="MeshInstance" parent="deco"]
+transform = Transform( -0.206477, 0, 0.794014, 0, 1, 0, -0.206477, 0, -0.794014, -17.5478, 0.005, 6.6546 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt58" type="MeshInstance" parent="deco"]
+transform = Transform( 0.206477, 0, 0.794014, 0, 1, 0, -0.206477, 0, 0.794014, -16.3019, 0.005, 6.73151 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt59" type="MeshInstance" parent="deco"]
+transform = Transform( 0.206477, 0, -0.794014, 0, 1, 0, 0.206477, 0, 0.794014, -16.7477, 0.005, 7.68449 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt60" type="MeshInstance" parent="deco"]
+transform = Transform( 0.206477, 0, 0.794014, 0, 1, 0, -0.206477, 0, 0.794014, -17.4553, 0.005, 7.51529 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt61" type="MeshInstance" parent="deco"]
+transform = Transform( 0.114199, 0, 0.103552, 0, 1, 0, -0.0424793, 0, 0.278383, -17.5438, 0.005, 7.13036 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt62" type="MeshInstance" parent="deco"]
+transform = Transform( 0.114344, 0, -0.102599, 0, 1, 0, 0.0420884, 0, 0.278735, -17.54, 0.005, 6.97639 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt63" type="MeshInstance" parent="deco"]
+transform = Transform( 0.114344, 0, -0.102599, 0, 1, 0, 0.0420884, 0, 0.278735, -16.4853, 0.005, 7.05723 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt64" type="MeshInstance" parent="deco"]
+transform = Transform( 0.115299, 0, 0.0960378, 0, 1, 0, -0.0393969, 0, 0.281064, -16.493, 0.005, 6.84829 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt65" type="MeshInstance" parent="deco"]
+transform = Transform( -0.040235, 0, -0.280357, 0, 1, 0, 0.115009, 0, -0.0980809, -17.1589, 0.005, 7.4845 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt67" type="MeshInstance" parent="deco"]
+transform = Transform( -0.040235, 0, -0.280357, 0, 1, 0, 0.115009, 0, -0.0980809, -16.8894, 0.005, 6.49907 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt68" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0172184, 0, -0.294038, 0, 1, 0, 0.120621, 0, 0.0419733, -17.0088, 0.005, 6.49907 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt69" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0172184, 0, -0.294038, 0, 1, 0, 0.120621, 0, 0.0419733, -17.0088, 0.005, 6.49907 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt70" type="MeshInstance" parent="deco"]
+transform = Transform( -0.121834, 0, 0.00372204, 0, 1, 0, -0.00152687, 0, -0.296995, -17.3701, 0.005, 7.85544 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt71" type="MeshInstance" parent="deco"]
+transform = Transform( -0.100006, 0, 0.169674, 0, 1, 0, -0.0696043, 0, -0.243784, -17.3806, 0.005, 7.99684 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt72" type="MeshInstance" parent="deco"]
+transform = Transform( -0.114314, 0, -0.102798, 0, 1, 0, 0.0421702, 0, -0.278662, -16.5741, 0.005, 7.97589 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt73" type="MeshInstance" parent="deco"]
+transform = Transform( -0.115568, 0, 0.094093, 0, 1, 0, -0.0385991, 0, -0.281721, -16.5479, 0.005, 7.81879 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt74" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0285162, 0, -0.288769, 0, 1, 0, 0.11846, 0, 0.0695139, -15.9038, 0.005, 6.55668 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt75" type="MeshInstance" parent="deco"]
+transform = Transform( -0.0369027, 0, -0.283068, 0, 1, 0, 0.116121, 0, -0.0899578, -16.1133, 0.005, 6.58287 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt76" type="MeshInstance" parent="deco"]
+transform = Transform( -0.0218759, 0, -0.292192, 0, 1, 0, 0.119864, 0, -0.053327, -16.0557, 0.005, 7.37888 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt77" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0275228, 0, -0.289342, 0, 1, 0, 0.118695, 0, 0.0670923, -16.1813, 0.005, 7.39983 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt78" type="MeshInstance" parent="deco"]
+transform = Transform( 0.107086, 0, -0.141689, 0, 1, 0, 0.0581239, 0, 0.261045, -16.5951, 0.005, 6.05917 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt79" type="MeshInstance" parent="deco"]
+transform = Transform( 0.118707, 0, 0.0669661, 0, 1, 0, -0.027471, 0, 0.289371, -16.5584, 0.005, 6.12725 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt80" type="MeshInstance" parent="deco"]
+transform = Transform( 0.121695, 0, -0.0146802, 0, 1, 0, 0.00602216, 0, 0.296655, -17.3282, 0.005, 6.07488 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt81" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0985387, 0, 0.1747, 0, 1, 0, -0.0716661, 0, 0.240208, -17.3911, 0.005, 5.95443 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt82" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0258941, 0, 0.290234, 0, 1, 0, -0.11906, 0, 0.0631221, -17.8692, 0.005, 6.6448 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt83" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0959277, 0, 0.183132, 0, 1, 0, -0.075125, 0, 0.233843, -18.0588, 0.005, 6.53162 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt84" type="MeshInstance" parent="deco"]
+transform = Transform( -0.0217252, 0, 0.292259, 0, 1, 0, -0.119891, 0, -0.0529596, -17.9258, 0.005, 7.41721 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt85" type="MeshInstance" parent="deco"]
+transform = Transform( -0.101381, 0, 0.164752, 0, 1, 0, -0.0675849, 0, -0.247137, -17.9966, 0.005, 7.43136 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt66" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0344117, 0, -0.284927, 0, 1, 0, 0.116883, 0, 0.0838854, -16.9125, 0.005, 7.4999 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt23" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0674498, -1.06162e-08, 0.354034, 5.00905e-10, 1, 3.9486e-09, -0.164394, -1.30877e-09, 0.145258, -23.382, 0.005, 5.64086 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt24" type="MeshInstance" parent="deco"]
+transform = Transform( 0.111249, -1.06162e-08, 0.298396, 9.99699e-10, 1, 3.48138e-09, -0.138559, -1.30877e-09, 0.239582, -23.382, 0.005, 5.64086 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt25" type="MeshInstance" parent="deco"]
+transform = Transform( -0.110975, -1.06162e-08, 0.0519924, -1.21361e-09, 1, 2.73416e-10, -0.0271103, -1.30877e-09, -0.212829, -24.2389, 0.00499998, 5.3202 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt26" type="MeshInstance" parent="deco"]
+transform = Transform( -0.0960068, -1.06162e-08, -0.118736, -9.38197e-10, 1, -1.5015e-09, 0.0619125, -1.30877e-09, -0.184123, -23.2074, 0.005, 6.96466 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt27" type="MeshInstance" parent="deco"]
+transform = Transform( -0.0957325, -1.06162e-08, 0.119548, -1.0979e-09, 1, 1.02886e-09, -0.0623358, -1.30877e-09, -0.183596, -23.3299, 0.005, 6.19744 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt28" type="MeshInstance" parent="deco"]
+transform = Transform( -0.105775, -1.06162e-08, 0.0827555, -1.17941e-09, 1, 6.13055e-10, -0.0431511, -1.30877e-09, -0.202857, -25.0384, 0.005, 6.55204 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt29" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0909764, -1.06162e-08, 0.132506, 8.75397e-10, 1, 1.63506e-09, -0.0690924, -1.30877e-09, 0.174475, -24.9933, 0.005, 5.78482 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt30" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0105642, -1.06162e-08, 0.218149, -3.67201e-11, 1, 2.34243e-09, -0.113749, -1.30878e-09, 0.0202602, -24.8256, 0.005, 5.79127 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt18" type="MeshInstance" parent="deco"]
+transform = Transform( 0.233651, 0, 0.673492, 0, 1, 0, -0.175137, 0, 0.898508, -24.2613, 0.005, 4.80204 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt32" type="MeshInstance" parent="deco"]
+transform = Transform( 0.180361, 0, 1.26451, 0, 1, 0, -0.229643, 0, 0.993142, -33.8693, 0.005, 2.50526 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt33" type="MeshInstance" parent="deco"]
+transform = Transform( 0.112474, 0, 0.310583, 0, 1, 0, -0.269472, 0, 0.129633, -34.8554, 0.005, 1.79046 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt34" type="MeshInstance" parent="deco"]
+transform = Transform( -0.108213, 0, 0.312588, 0, 1, 0, -0.271211, 0, -0.124723, -33.9273, 0.005, 1.81755 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt35" type="MeshInstance" parent="deco"]
+transform = Transform( -0.279047, 0, 0.0991392, 0, 1, 0, -0.0860164, 0, -0.321618, -33.9624, 0.005, 1.93127 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt36" type="MeshInstance" parent="deco"]
+transform = Transform( -0.262216, 0, -0.148089, 0, 1, 0, 0.128487, 0, -0.302219, -33.9769, 0.005, 2.21996 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt37" type="MeshInstance" parent="deco"]
+transform = Transform( -0.174195, 0, -0.0754787, 0, 1, 0, 0.0400881, 0, -0.327978, -33.6224, 0.005, 2.94994 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt38" type="MeshInstance" parent="deco"]
+transform = Transform( -0.0609889, 0, -0.316355, 0, 1, 0, 0.168022, 0, -0.114831, -32.8028, 0.005, 3.09219 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt19" type="MeshInstance" parent="deco"]
+transform = Transform( -0.175137, 0, 0.898508, 0, 1, 0, -0.233651, 0, -0.673492, -24.5683, 0.005, 5.86338 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt20" type="MeshInstance" parent="deco"]
+transform = Transform( 0.289916, 0, 0.118309, 0, 1, 0, -0.0348476, 0, 0.984279, -23.5157, 0.005, 6.54754 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt21" type="MeshInstance" parent="deco"]
+transform = Transform( 0.12508, 0, -0.443247, 0, 1, 0, 0.263857, 0, 0.210119, -23.8695, 0.005, 7.07075 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt22" type="MeshInstance" parent="deco"]
+transform = Transform( 0.144502, 0, -0.181618, 0, 1, 0, 0.057595, 0, 0.455668, -23.6572, 0.005, 6.70666 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt9" type="MeshInstance" parent="deco"]
+transform = Transform( 0.156097, 0, 0.948989, 0, 1, 0, -0.246778, 0, 0.600274, -9.50984, 0.005, 15.3667 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt4" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0624992, 0, 1.09688, 0, 1, 0, -0.285236, 0, 0.240342, -11.8043, 0.005, 15.556 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt40" type="MeshInstance" parent="deco"]
+transform = Transform( 0.292002, 0, 0.00188021, 0, 1, 0, -0.000912325, 0, 0.601786, -26.9589, 0.005, 15.8777 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt41" type="MeshInstance" parent="deco"]
+transform = Transform( 0.292002, 0, 0.00188021, 0, 1, 0, -0.000912325, 0, 0.601786, -27.1731, 0.005, 13.1268 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt42" type="MeshInstance" parent="deco"]
+transform = Transform( 0.278577, 0, -0.167109, 0, 1, 0, 0.087525, 0, 0.531879, -27.3559, 0.005, 13.7517 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt45" type="MeshInstance" parent="deco"]
+transform = Transform( 0.114535, 0, -0.0417898, 0, 1, 0, 0.0211637, 0, 0.22616, -27.3541, 0.005, 14.3899 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt49" type="MeshInstance" parent="deco"]
+transform = Transform( 0.112355, 0, 0.060626, 0, 1, 0, -0.030703, 0, 0.221854, -26.9604, 0.005, 13.3191 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt50" type="MeshInstance" parent="deco"]
+transform = Transform( 0.11636, 0, 0.0101724, 0, 1, 0, -0.00515163, 0, 0.229764, -26.6116, 0.005, 14.3609 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt51" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0511247, 0, -0.206649, 0, 1, 0, 0.104654, 0, 0.10095, -27.1516, 0.005, 13.8173 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt52" type="MeshInstance" parent="deco"]
+transform = Transform( -0.037499, 0, -0.217743, 0, 1, 0, 0.110273, 0, -0.0740453, -26.9046, 0.005, 13.7961 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt46" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0594265, 0, 0.197802, 0, 1, 0, -0.100173, 0, 0.117343, -27.1085, 0.005, 15.2365 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt47" type="MeshInstance" parent="deco"]
+transform = Transform( -0.038855, 0, 0.216814, 0, 1, 0, -0.109802, 0, -0.0767228, -26.9356, 0.005, 15.2461 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt53" type="MeshInstance" parent="deco"]
+transform = Transform( -0.0874572, 0, 0.151895, 0, 1, 0, -0.076925, 0, -0.172692, -27.2093, 0.005, 15.9808 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt54" type="MeshInstance" parent="deco"]
+transform = Transform( -0.103177, 0, -0.106713, 0, 1, 0, 0.0540431, 0, -0.203733, -26.7003, 0.005, 16.0192 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt55" type="MeshInstance" parent="deco"]
+transform = Transform( -0.103177, 0, -0.106713, 0, 1, 0, 0.0540431, 0, -0.203733, -27.3974, 0.005, 12.9434 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt56" type="MeshInstance" parent="deco"]
+transform = Transform( -0.0952956, 0, 0.132238, 0, 1, 0, -0.0669699, 0, -0.18817, -26.9597, 0.005, 13.0087 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt43" type="MeshInstance" parent="deco"]
+transform = Transform( 0.168126, 0, -0.18038, 0, 1, 0, 0.0528228, 0, 0.574119, -26.6625, 0.005, 14.8377 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt48" type="MeshInstance" parent="deco"]
+transform = Transform( 0.155177, 0, 0.285227, 0, 1, 0, -0.0835263, 0, 0.529901, -26.7538, 0.005, 13.8693 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt44" type="MeshInstance" parent="deco"]
+transform = Transform( 0.164172, 0, 0.270944, 0, 1, 0, -0.064064, 0, 0.694325, -27.3587, 0.005, 14.847 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt39" type="MeshInstance" parent="deco"]
+transform = Transform( -0.186983, 0, 0.0141298, 0, 1, 0, -0.00235305, 0, -1.12281, -29.489, 0.005, 17.4762 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt7" type="MeshInstance" parent="deco"]
+transform = Transform( -0.22109, 0, 0.235189, 0, 1, 0, -0.0873392, 0, -0.595355, -10.5512, 0.005, 15.4208 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt8" type="MeshInstance" parent="deco"]
+transform = Transform( -0.110025, 9.03981e-10, -0.060388, 9.97118e-11, 1, 5.22786e-11, 0.0268762, -9.34829e-12, -0.247215, -10.5509, 0.005, 15.9961 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt5" type="MeshInstance" parent="deco"]
+transform = Transform( 0.285537, 0, 0.112266, 0, 1, 0, -0.0611095, 0, 0.524566, -10.4663, 0.005, 16.8338 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt10" type="MeshInstance" parent="deco"]
+transform = Transform( 0.139236, 0, -0.50547, 0, 1, 0, 0.139865, 0, 0.503198, -10.0787, 0.005, 16.0781 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt11" type="MeshInstance" parent="deco"]
+transform = Transform( -0.0021245, 0, -0.177466, 0, 1, 0, 0.104381, 0, -0.00361205, -10.3742, 0.005, 16.1702 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt12" type="MeshInstance" parent="deco"]
+transform = Transform( 0.023599, 0, -0.172909, 0, 1, 0, 0.1017, 0, 0.0401227, -10.2111, 0.005, 15.2229 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt13" type="MeshInstance" parent="deco"]
+transform = Transform( -0.102307, 0, -0.0353793, 0, 1, 0, 0.0208091, 0, -0.173942, -9.80803, 0.005, 15.495 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt14" type="MeshInstance" parent="deco"]
+transform = Transform( 0.00161983, 0, -0.177482, 0, 1, 0, 0.10439, 0, 0.00275401, -9.43009, 0.005, 15.7235 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt15" type="MeshInstance" parent="deco"]
+transform = Transform( 0.00161983, 0, -0.177482, 0, 1, 0, 0.10439, 0, 0.00275401, -9.10614, 0.005, 15.3497 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt16" type="MeshInstance" parent="deco"]
+transform = Transform( 0.0767255, 0, -0.120378, 0, 1, 0, 0.0708028, 0, 0.130448, -9.00231, 0.005, 15.3082 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt6" type="MeshInstance" parent="deco"]
+transform = Transform( 0.210399, 0, 0.371978, 0, 1, 0, -0.202479, 0, 0.386529, -10.8722, 0.005, 16.0647 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="dirt2" type="MeshInstance" parent="deco"]
+transform = Transform( 0.186171, 0, -0.173056, 0, 1, 0, 0.0352345, 0, 0.914384, -6.83338, 0.005, -6.77908 )
+use_in_baked_light = true
+mesh = SubResource( 74 )
+material/0 = SubResource( 75 )
+
+[node name="fountain" parent="deco" instance=ExtResource( 18 )]
+transform = Transform( 0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 0.5, 0.117926, 0.5 )
+
+[node name="fountain2" parent="deco" instance=ExtResource( 18 )]
+transform = Transform( 0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -27, 0.117926, -2 )
+
+[node name="fountain3" parent="deco" instance=ExtResource( 18 )]
+transform = Transform( 0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -29.5034, 0.117926, 15.5285 )
+
+[node name="fountain4" parent="deco" instance=ExtResource( 18 )]
+transform = Transform( 0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -26.9982, 0.117926, 14.5007 )
+
+[node name="fountain5" parent="deco" instance=ExtResource( 18 )]
+transform = Transform( 0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -16.9982, 0.117926, 7.0007 )
+
+[node name="paths" type="Spatial" parent="."]
+
+[node name="path1" parent="paths" instance=ExtResource( 3 )]
+
+[node name="pathPoint" parent="paths/path1" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -3.46934, 0.122696, 0.548755 )
+
+[node name="pathPoint2" parent="paths/path1" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -3.46934, 0.122681, -1.46019 )
+
+[node name="pathPoint3" parent="paths/path1" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -2.48671, 0.122681, -1.48203 )
+
+[node name="pathPoint4" parent="paths/path1" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -2.46487, 0.122681, -3.4473 )
+
+[node name="pathPoint5" parent="paths/path1" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.483037, 0.122681, -3.46913 )
+
+[node name="pathPoint6" parent="paths/path1" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.504874, 0.122696, -0.433881 )
+
+[node name="pathPoint7" parent="paths/path1" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.499599, 0.122696, -0.477554 )
+
+[node name="pathPoint8" parent="paths/path1" instance=ExtResource( 2 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.47776, 0.122696, 0.548755 )
+
+[node name="pups" type="Spatial" parent="."]
+
+[node name="pupTurbo" parent="pups" instance=ExtResource( 15 )]
+transform = Transform( 0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, -0.567267, 0.357546, -1.38018 )
+
+[node name="OBJ" type="Position3D" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1.75825, 0, -2.93197 )
+
+[node name="MeshInstance" type="MeshInstance" parent="OBJ"]
+transform = Transform( 0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.2, 0, 0, 0 )
+mesh = SubResource( 85 )
+material/0 = null
+
+[node name="ramp" parent="." instance=ExtResource( 23 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0, -0.5 )
+
+[node name="cell" type="MeshInstance" parent="."]
+transform = Transform( -8.74228e-08, 0, -2, 0, 1, 0, 2, 0, -8.74228e-08, -0.428644, 0, -1.87366e-08 )
+mesh = SubResource( 77 )
+material/0 = SubResource( 79 )
+
+[connection signal="body_entered" from="Camera/Area" to="Camera" method="_on_Area_body_entered"]
+[connection signal="body_exited" from="Camera/Area" to="Camera" method="_on_Area_body_exited"]
+
+[editable path="UI/virtual_joystick"]

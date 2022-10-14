@@ -1,0 +1,248 @@
+[gd_scene load_steps=15 format=2]
+
+[ext_resource path="res://art/3D/fountain.obj" type="ArrayMesh" id=1]
+[ext_resource path="res://art/2D/shadows/shaTree.png" type="Texture" id=2]
+
+[sub_resource type="SpatialMaterial" id=12]
+flags_transparent = true
+vertex_color_use_as_albedo = true
+albedo_color = Color( 0, 0.788235, 1, 0.6 )
+
+[sub_resource type="SpatialMaterial" id=2]
+vertex_color_use_as_albedo = true
+albedo_color = Color( 1, 0.956863, 0.733333, 1 )
+
+[sub_resource type="CylinderShape" id=7]
+radius = 0.87241
+
+[sub_resource type="SpatialMaterial" id=8]
+resource_name = "default"
+flags_transparent = true
+vertex_color_use_as_albedo = true
+albedo_color = Color( 0.833333, 0.742857, 0.644444, 1 )
+metallic = 0.173333
+
+[sub_resource type="ArrayMesh" id=9]
+surfaces/0 = {
+"aabb": AABB( -1.7013, -1.90211, -1.61803, 3.4026, 3.80423, 3.23607 ),
+"array_data": PoolByteArray( 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 146, 200, 144, 72, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 146, 200, 144, 72, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 146, 200, 144, 72, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 19, 66, 185, 89, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 19, 66, 185, 89, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 19, 66, 185, 89, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 55, 65, 101, 15, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 55, 65, 101, 15, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 55, 65, 101, 15, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 190, 228, 216, 16, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 190, 228, 216, 16, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 190, 228, 216, 16, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 103, 143, 57, 193, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 103, 143, 57, 193, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 103, 143, 57, 193, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 199, 62, 103, 143, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 199, 62, 103, 143, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 199, 62, 103, 143, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 101, 15, 201, 190, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 101, 15, 201, 190, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 101, 15, 201, 190, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 69, 38, 235, 61, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 69, 38, 235, 61, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 69, 38, 235, 61, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 57, 193, 153, 112, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 57, 193, 153, 112, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 57, 193, 153, 112, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 66, 27, 40, 239, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 66, 27, 40, 239, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 66, 27, 40, 239, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 136, 148, 134, 20, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 136, 148, 134, 20, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 136, 148, 134, 20, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 38, 111, 68, 155, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 38, 111, 68, 155, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 38, 111, 68, 155, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 237, 189, 71, 166, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 237, 189, 71, 166, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 237, 189, 71, 166, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 110, 55, 112, 183, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 110, 55, 112, 183, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 110, 55, 112, 183, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 155, 240, 55, 65, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 155, 240, 55, 65, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 155, 240, 55, 65, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 120, 107, 122, 235, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 120, 107, 122, 235, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 120, 107, 122, 235, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 218, 144, 188, 100, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 218, 144, 188, 100, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 218, 144, 188, 100, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 201, 190, 155, 240, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 201, 190, 155, 240, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 201, 190, 155, 240, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 153, 112, 199, 62, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 153, 112, 199, 62, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 153, 112, 199, 62, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 187, 217, 21, 194, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 187, 217, 21, 194, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 187, 217, 21, 194 ),
+"array_index_data": PoolByteArray( 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0, 26, 0, 27, 0, 28, 0, 29, 0, 30, 0, 31, 0, 32, 0, 33, 0, 34, 0, 35, 0, 36, 0, 37, 0, 38, 0, 39, 0, 40, 0, 41, 0, 42, 0, 43, 0, 44, 0, 45, 0, 46, 0, 47, 0, 48, 0, 49, 0, 50, 0, 51, 0, 52, 0, 53, 0, 54, 0, 55, 0, 56, 0, 57, 0, 58, 0, 59, 0 ),
+"blend_shape_data": [  ],
+"format": 2194691,
+"index_count": 60,
+"material": SubResource( 8 ),
+"name": "default",
+"primitive": 4,
+"skeleton_aabb": [  ],
+"vertex_count": 60
+}
+
+[sub_resource type="Curve" id=4]
+_data = [ Vector2( 0, 0.645455 ), 0.0, 0.0, 0, 0, Vector2( 1, 0.360227 ), 0.0, 0.0, 0, 0 ]
+
+[sub_resource type="SpatialMaterial" id=10]
+resource_name = "default"
+flags_transparent = true
+vertex_color_use_as_albedo = true
+albedo_color = Color( 1, 1, 1, 0.596078 )
+metallic = 0.173333
+
+[sub_resource type="ArrayMesh" id=11]
+surfaces/0 = {
+"aabb": AABB( -1.7013, -1.90211, -1.61803, 3.4026, 3.80423, 3.23607 ),
+"array_data": PoolByteArray( 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 146, 200, 144, 72, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 146, 200, 144, 72, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 146, 200, 144, 72, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 19, 66, 185, 89, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 19, 66, 185, 89, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 19, 66, 185, 89, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 55, 65, 101, 15, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 55, 65, 101, 15, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 55, 65, 101, 15, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 190, 228, 216, 16, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 190, 228, 216, 16, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 190, 228, 216, 16, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 103, 143, 57, 193, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 103, 143, 57, 193, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 103, 143, 57, 193, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 199, 62, 103, 143, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 199, 62, 103, 143, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 199, 62, 103, 143, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 101, 15, 201, 190, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 101, 15, 201, 190, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 101, 15, 201, 190, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 69, 38, 235, 61, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 69, 38, 235, 61, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 69, 38, 235, 61, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 57, 193, 153, 112, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 57, 193, 153, 112, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 57, 193, 153, 112, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 66, 27, 40, 239, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 66, 27, 40, 239, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 66, 27, 40, 239, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 136, 148, 134, 20, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 136, 148, 134, 20, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 136, 148, 134, 20, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 38, 111, 68, 155, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 38, 111, 68, 155, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 38, 111, 68, 155, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 237, 189, 71, 166, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 237, 189, 71, 166, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 237, 189, 71, 166, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 110, 55, 112, 183, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 110, 55, 112, 183, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 110, 55, 112, 183, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 155, 240, 55, 65, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 155, 240, 55, 65, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 155, 240, 55, 65, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 120, 107, 122, 235, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 120, 107, 122, 235, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 120, 107, 122, 235, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 218, 144, 188, 100, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 218, 144, 188, 100, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 218, 144, 188, 100, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 201, 190, 155, 240, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 201, 190, 155, 240, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 201, 190, 155, 240, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 153, 112, 199, 62, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 153, 112, 199, 62, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 153, 112, 199, 62, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 187, 217, 21, 194, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 187, 217, 21, 194, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 187, 217, 21, 194 ),
+"array_index_data": PoolByteArray( 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0, 26, 0, 27, 0, 28, 0, 29, 0, 30, 0, 31, 0, 32, 0, 33, 0, 34, 0, 35, 0, 36, 0, 37, 0, 38, 0, 39, 0, 40, 0, 41, 0, 42, 0, 43, 0, 44, 0, 45, 0, 46, 0, 47, 0, 48, 0, 49, 0, 50, 0, 51, 0, 52, 0, 53, 0, 54, 0, 55, 0, 56, 0, 57, 0, 58, 0, 59, 0 ),
+"blend_shape_data": [  ],
+"format": 2194691,
+"index_count": 60,
+"material": SubResource( 10 ),
+"name": "default",
+"primitive": 4,
+"skeleton_aabb": [  ],
+"vertex_count": 60
+}
+
+[sub_resource type="CylinderMesh" id=13]
+
+[sub_resource type="SpatialMaterial" id=14]
+vertex_color_use_as_albedo = true
+albedo_color = Color( 0, 0.929412, 1, 1 )
+
+[sub_resource type="PlaneMesh" id=15]
+
+[sub_resource type="SpatialMaterial" id=16]
+vertex_color_use_as_albedo = true
+
+[node name="fountain" type="MeshInstance"]
+mesh = ExtResource( 1 )
+material/0 = SubResource( 12 )
+material/1 = SubResource( 2 )
+
+[node name="StaticBody" type="StaticBody" parent="."]
+
+[node name="CollisionShape" type="CollisionShape" parent="StaticBody"]
+shape = SubResource( 7 )
+
+[node name="water" type="CPUParticles" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.03737, 0 )
+amount = 30
+lifetime = 0.85
+mesh = SubResource( 9 )
+direction = Vector3( 0, 1, 0 )
+spread = 10.0
+initial_velocity = 3.0
+scale_amount = 0.05
+scale_amount_curve = SubResource( 4 )
+color = Color( 0, 0.929412, 1, 1 )
+
+[node name="splash" type="CPUParticles" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.117416, 0 )
+amount = 20
+lifetime = 0.5
+mesh = SubResource( 11 )
+emission_shape = 5
+emission_ring_radius = 0.8
+emission_ring_inner_radius = 0.1
+emission_ring_height = 0.8
+emission_ring_axis = Vector3( 1, 0, 1 )
+direction = Vector3( 0, 1, 0 )
+spread = 0.0
+gravity = Vector3( 0, -10, 0 )
+initial_velocity = 3.0
+radial_accel = 5.0
+scale_amount = 0.05
+scale_amount_curve = SubResource( 4 )
+
+[node name="MeshInstance" type="MeshInstance" parent="."]
+transform = Transform( 0.8, 0, 0, 0, 0.1, 0, 0, 0, 0.8, 0, -0.273047, 0 )
+mesh = SubResource( 13 )
+material/0 = SubResource( 14 )
+
+[node name="influence" type="Spatial" parent="."]
+transform = Transform( 0.945, 0, 0, 0, 1, 0, 0, 0, 0.945, 0, -0.388673, 0 )
+visible = false
+
+[node name="MeshInstance" type="MeshInstance" parent="influence"]
+transform = Transform( 0.129, 0, 0, 0, 1, 0, 0, 0, 0.088, 0, 0, -0.895846 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance2" type="MeshInstance" parent="influence"]
+transform = Transform( 0.129, 0, 0, 0, 1, 0, 0, 0, 0.088, 0, 0, 0.896271 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance3" type="MeshInstance" parent="influence"]
+transform = Transform( 0.124604, 0, 0.0227761, 0, 1, 0, -0.0333877, 0, 0.0850015, -0.231917, 0, -0.865314 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance4" type="MeshInstance" parent="influence"]
+transform = Transform( 0.124604, 0, 0.0227761, 0, 1, 0, -0.0333877, 0, 0.0850015, 0.231917, 0, 0.865738 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance5" type="MeshInstance" parent="influence"]
+transform = Transform( 0.111717, 0, 0.044, 0, 1, 0, -0.0645, 0, 0.0762102, -0.448029, 0, -0.775797 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance6" type="MeshInstance" parent="influence"]
+transform = Transform( 0.111717, 0, 0.044, 0, 1, 0, -0.0645, 0, 0.0762102, 0.448029, 0, 0.776221 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance7" type="MeshInstance" parent="influence"]
+transform = Transform( 0.0912168, 0, 0.0622254, 0, 1, 0, -0.0912168, 0, 0.0622254, -0.633609, 0, -0.633397 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance8" type="MeshInstance" parent="influence"]
+transform = Transform( 0.0912168, 0, 0.0622254, 0, 1, 0, -0.0912168, 0, 0.0622254, 0.633609, 0, 0.633821 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance9" type="MeshInstance" parent="influence"]
+transform = Transform( 0.0645, 0, 0.0762102, 0, 1, 0, -0.111717, 0, 0.044, -0.776009, 0, -0.447817 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance10" type="MeshInstance" parent="influence"]
+transform = Transform( 0.0645, 0, 0.0762102, 0, 1, 0, -0.111717, 0, 0.044, 0.776009, 0, 0.448241 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance11" type="MeshInstance" parent="influence"]
+transform = Transform( 0.0333877, 0, 0.0850015, 0, 1, 0, -0.124604, 0, 0.0227761, -0.865526, 0, -0.231705 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance12" type="MeshInstance" parent="influence"]
+transform = Transform( 0.0333877, 0, 0.0850015, 0, 1, 0, -0.124604, 0, 0.0227761, 0.865526, 0, 0.232129 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance13" type="MeshInstance" parent="influence"]
+transform = Transform( -5.63877e-09, 0, 0.088, 0, 1, 0, -0.129, 0, -3.8466e-09, -0.896058, 0, 0.000212197 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance14" type="MeshInstance" parent="influence"]
+transform = Transform( -5.63877e-09, 0, 0.088, 0, 1, 0, -0.129, 0, -3.8466e-09, 0.896058, 0, 0.000212242 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance15" type="MeshInstance" parent="influence"]
+transform = Transform( -0.0333877, 0, 0.0850015, 0, 1, 0, -0.124604, 0, -0.0227761, -0.865526, 0, 0.232129 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance16" type="MeshInstance" parent="influence"]
+transform = Transform( -0.0333877, 0, 0.0850015, 0, 1, 0, -0.124604, 0, -0.0227761, 0.865526, 0, -0.231705 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance17" type="MeshInstance" parent="influence"]
+transform = Transform( -0.0645, 0, 0.0762102, 0, 1, 0, -0.111717, 0, -0.044, -0.776009, 0, 0.448241 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance18" type="MeshInstance" parent="influence"]
+transform = Transform( -0.0645, 0, 0.0762102, 0, 1, 0, -0.111717, 0, -0.044, 0.776009, 0, -0.447817 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance19" type="MeshInstance" parent="influence"]
+transform = Transform( -0.0912168, 0, 0.0622254, 0, 1, 0, -0.0912168, 0, -0.0622254, -0.633609, 0, 0.633821 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance20" type="MeshInstance" parent="influence"]
+transform = Transform( -0.0912168, 0, 0.0622254, 0, 1, 0, -0.0912168, 0, -0.0622254, 0.633609, 0, -0.633397 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance21" type="MeshInstance" parent="influence"]
+transform = Transform( -0.111717, 0, 0.044, 0, 1, 0, -0.0645, 0, -0.0762102, -0.448029, 0, 0.776221 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance22" type="MeshInstance" parent="influence"]
+transform = Transform( -0.111717, 0, 0.044, 0, 1, 0, -0.0645, 0, -0.0762102, 0.448029, 0, -0.775797 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance23" type="MeshInstance" parent="influence"]
+transform = Transform( -0.124604, 0, 0.0227761, 0, 1, 0, -0.0333877, 0, -0.0850015, -0.231917, 0, 0.865738 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="MeshInstance24" type="MeshInstance" parent="influence"]
+transform = Transform( -0.124604, 0, 0.0227761, 0, 1, 0, -0.0333877, 0, -0.0850015, 0.231917, 0, -0.865314 )
+mesh = SubResource( 15 )
+material/0 = SubResource( 16 )
+
+[node name="shadow" type="Sprite3D" parent="."]
+transform = Transform( 0.4, 0, 0, 0, -4.37114e-08, 1, 0, -0.4, -1.74846e-08, 0, -0.38003, 0 )
+visible = false
+texture = ExtResource( 2 )

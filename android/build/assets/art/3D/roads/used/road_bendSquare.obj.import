@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/road_bendSquare.obj-a7fe167a364640510c922d3c5c6cdaaa.mesh"
+
+[deps]
+
+files=[ "res://.import/road_bendSquare.obj-a7fe167a364640510c922d3c5c6cdaaa.mesh" ]
+
+source_file="res://art/3D/roads/used/road_bendSquare.obj"
+dest_files=[ "res://.import/road_bendSquare.obj-a7fe167a364640510c922d3c5c6cdaaa.mesh", "res://.import/road_bendSquare.obj-a7fe167a364640510c922d3c5c6cdaaa.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

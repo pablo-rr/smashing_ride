@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/road_straight.obj-bdfd9514449e190e188afbcbe4049adc.mesh"
+
+[deps]
+
+files=[ "res://.import/road_straight.obj-bdfd9514449e190e188afbcbe4049adc.mesh" ]
+
+source_file="res://art/3D/roads/road_straight.obj"
+dest_files=[ "res://.import/road_straight.obj-bdfd9514449e190e188afbcbe4049adc.mesh", "res://.import/road_straight.obj-bdfd9514449e190e188afbcbe4049adc.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

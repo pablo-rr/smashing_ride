@@ -1,0 +1,277 @@
+[gd_scene load_steps=14 format=2]
+
+[ext_resource path="res://art/3D/carsV3/sedan.obj" type="ArrayMesh" id=1]
+[ext_resource path="res://art/audio/sfx/explodemini.wav" type="AudioStream" id=2]
+
+[sub_resource type="GDScript" id=3]
+script/source = "extends KinematicBody
+
+export var speed : float = 0.92
+
+onready var point : Array = []
+onready var dir : Vector3 = Vector3.ZERO
+onready var rot_speed : float = 0.0
+onready var hit : bool = false
+
+func _ready() -> void:
+	$PathCollision.monitorable = true
+	$PathCollision.monitoring = true
+	$PathCollision.transform.origin.y += 100
+	$PathCollision.transform.origin.y -= 100
+
+func _physics_process(delta: float) -> void:
+	dir = Vector3(0, 0, 1)
+	move_and_slide(dir * speed)
+	rotation_degrees.y += rot_speed
+#	get_grid_cell()
+	
+func get_grid_cell() -> void:
+	var cell_offset : float =- 0.5
+	var position_to_cell = Vector2(global_transform.origin.x + cell_offset, global_transform.origin.z + cell_offset)
+	var cell_id : int = get_parent().get_node(\"roads\").get_cell_item(position_to_cell.x, 0, position_to_cell.y)
+	var cell_orientation : int = get_parent().get_node(\"roads\").get_cell_item_orientation(position_to_cell.x, 0, position_to_cell.y)
+	var cell : String = get_parent().get_node(\"roads\").mesh_library.get_item_name(cell_id)
+	print(\"c: \", cell, \" ; or: \", cell_orientation)
+	
+func hit(impact_origin : Vector3) -> void:
+	if(!hit):
+		hit = true
+		var impact_dir : Vector3 = -(impact_origin - transform.origin).normalized()
+		impact_dir.y = 0
+		dir = impact_dir
+		speed = 2.8
+		rot_speed = 10.0
+
+
+func _on_explode_body_entered(body: Node) -> void:
+	if(hit):
+		speed = 0.0
+		rot_speed = 0.0
+		$AnimationPlayer.play(\"die\")
+		yield($AnimationPlayer, \"animation_finished\")
+		queue_free()
+
+
+func _on_VisibilityNotifier_camera_exited(camera: Camera) -> void:
+	queue_free()
+"
+
+[sub_resource type="BoxShape" id=2]
+extents = Vector3( 102.353, 182.653, 175.287 )
+
+[sub_resource type="SpatialMaterial" id=9]
+resource_name = "default"
+vertex_color_use_as_albedo = true
+metallic = 0.173333
+
+[sub_resource type="ArrayMesh" id=10]
+surfaces/0 = {
+"aabb": AABB( -1.7013, -1.90211, -1.61803, 3.4026, 3.80423, 3.23607 ),
+"array_data": PoolByteArray( 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 146, 200, 144, 72, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 146, 200, 144, 72, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 146, 200, 144, 72, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 19, 66, 185, 89, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 19, 66, 185, 89, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 19, 66, 185, 89, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 55, 65, 101, 15, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 55, 65, 101, 15, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 55, 65, 101, 15, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 190, 228, 216, 16, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 190, 228, 216, 16, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 190, 228, 216, 16, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 103, 143, 57, 193, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 103, 143, 57, 193, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 103, 143, 57, 193, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 199, 62, 103, 143, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 199, 62, 103, 143, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 199, 62, 103, 143, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 101, 15, 201, 190, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 101, 15, 201, 190, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 101, 15, 201, 190, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 69, 38, 235, 61, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 69, 38, 235, 61, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 69, 38, 235, 61, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 57, 193, 153, 112, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 57, 193, 153, 112, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 57, 193, 153, 112, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 66, 27, 40, 239, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 66, 27, 40, 239, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 66, 27, 40, 239, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 136, 148, 134, 20, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 136, 148, 134, 20, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 136, 148, 134, 20, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 38, 111, 68, 155, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 38, 111, 68, 155, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 38, 111, 68, 155, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 237, 189, 71, 166, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 237, 189, 71, 166, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 237, 189, 71, 166, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 110, 55, 112, 183, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 110, 55, 112, 183, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 110, 55, 112, 183, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 155, 240, 55, 65, 0, 0, 0, 0, 113, 120, 243, 63, 0, 0, 0, 0, 155, 240, 55, 65, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 63, 155, 240, 55, 65, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 63, 120, 107, 122, 235, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 120, 107, 122, 235, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 120, 107, 122, 235, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 191, 218, 144, 188, 100, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 218, 144, 188, 100, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 191, 218, 144, 188, 100, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 201, 190, 155, 240, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 201, 190, 155, 240, 72, 45, 176, 191, 64, 196, 89, 63, 0, 0, 128, 63, 201, 190, 155, 240, 72, 45, 176, 63, 64, 196, 89, 191, 0, 0, 128, 191, 153, 112, 199, 62, 64, 196, 217, 63, 64, 196, 89, 63, 0, 0, 0, 0, 153, 112, 199, 62, 80, 150, 6, 63, 64, 196, 89, 63, 189, 27, 207, 191, 153, 112, 199, 62, 0, 0, 0, 0, 113, 120, 243, 191, 0, 0, 0, 0, 187, 217, 21, 194, 64, 196, 217, 191, 64, 196, 89, 191, 0, 0, 0, 0, 187, 217, 21, 194, 80, 150, 6, 191, 64, 196, 89, 191, 189, 27, 207, 63, 187, 217, 21, 194 ),
+"array_index_data": PoolByteArray( 0, 0, 1, 0, 2, 0, 3, 0, 4, 0, 5, 0, 6, 0, 7, 0, 8, 0, 9, 0, 10, 0, 11, 0, 12, 0, 13, 0, 14, 0, 15, 0, 16, 0, 17, 0, 18, 0, 19, 0, 20, 0, 21, 0, 22, 0, 23, 0, 24, 0, 25, 0, 26, 0, 27, 0, 28, 0, 29, 0, 30, 0, 31, 0, 32, 0, 33, 0, 34, 0, 35, 0, 36, 0, 37, 0, 38, 0, 39, 0, 40, 0, 41, 0, 42, 0, 43, 0, 44, 0, 45, 0, 46, 0, 47, 0, 48, 0, 49, 0, 50, 0, 51, 0, 52, 0, 53, 0, 54, 0, 55, 0, 56, 0, 57, 0, 58, 0, 59, 0 ),
+"blend_shape_data": [  ],
+"format": 2194691,
+"index_count": 60,
+"material": SubResource( 9 ),
+"name": "default",
+"primitive": 4,
+"skeleton_aabb": [  ],
+"vertex_count": 60
+}
+
+[sub_resource type="Curve" id=4]
+_data = [ Vector2( 0, 0.886363 ), 0.0, 0.0, 0, 0, Vector2( 0.725146, 0.304545 ), 0.0, 0.0, 0, 0, Vector2( 0.888889, 0.495454 ), 0.0, 0.0, 0, 0, Vector2( 1, 0 ), 0.0, 0.0, 0, 0 ]
+
+[sub_resource type="Gradient" id=5]
+offsets = PoolRealArray( 0, 0.0675676, 0.182432, 1 )
+colors = PoolColorArray( 1, 0.424805, 0, 1, 1, 0.847059, 0, 1, 1, 0.424805, 0, 1, 0.483887, 0.483887, 0.483887, 1 )
+
+[sub_resource type="Animation" id=6]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath("CPUParticles:emitting")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ false ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("MeshInstance:visible")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ true ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("CarHit:disabled")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ false ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("explSnd:playing")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ false ]
+}
+
+[sub_resource type="Animation" id=7]
+resource_name = "die"
+tracks/0/type = "value"
+tracks/0/path = NodePath("CPUParticles:emitting")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ true ]
+}
+tracks/1/type = "value"
+tracks/1/path = NodePath("MeshInstance:visible")
+tracks/1/interp = 1
+tracks/1/loop_wrap = true
+tracks/1/imported = false
+tracks/1/enabled = true
+tracks/1/keys = {
+"times": PoolRealArray( 0, 0.7 ),
+"transitions": PoolRealArray( 1, 1 ),
+"update": 1,
+"values": [ true, false ]
+}
+tracks/2/type = "value"
+tracks/2/path = NodePath("CarHit:disabled")
+tracks/2/interp = 1
+tracks/2/loop_wrap = true
+tracks/2/imported = false
+tracks/2/enabled = true
+tracks/2/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ true ]
+}
+tracks/3/type = "value"
+tracks/3/path = NodePath("explSnd:playing")
+tracks/3/interp = 1
+tracks/3/loop_wrap = true
+tracks/3/imported = false
+tracks/3/enabled = true
+tracks/3/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 1,
+"values": [ true ]
+}
+
+[sub_resource type="BoxShape" id=8]
+extents = Vector3( 132.814, 52.102, 210.843 )
+
+[sub_resource type="CylinderShape" id=11]
+radius = 13.594
+height = 702.197
+
+[sub_resource type="CylinderMesh" id=12]
+
+[node name="npc" type="KinematicBody"]
+transform = Transform( 0.001, 0, 0, 0, 0.001, 0, 0, 0, 0.001, 0, 0, 0 )
+script = SubResource( 3 )
+
+[node name="MeshInstance" type="MeshInstance" parent="."]
+transform = Transform( -7.64949e-06, 0, 175, 0, 175, 0, -175, 0, -7.64949e-06, 0, -33, 24.452 )
+mesh = ExtResource( 1 )
+material/0 = null
+material/1 = null
+material/2 = null
+material/3 = null
+material/4 = null
+material/5 = null
+material/6 = null
+material/7 = null
+material/8 = null
+material/9 = null
+material/10 = null
+material/11 = null
+material/12 = null
+material/13 = null
+
+[node name="CarHit" type="CollisionShape" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 133.53, 23.1074 )
+shape = SubResource( 2 )
+
+[node name="CPUParticles" type="CPUParticles" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 111.073, 8.0893 )
+emitting = false
+amount = 300
+lifetime = 0.6
+one_shot = true
+mesh = SubResource( 10 )
+emission_shape = 1
+emission_sphere_radius = 128.0
+direction = Vector3( 0, 1, 0 )
+spread = 180.0
+gravity = Vector3( 0, 0, 0 )
+initial_velocity = 600.0
+angular_velocity_random = 1.0
+scale_amount = 60.0
+scale_amount_curve = SubResource( 4 )
+color_ramp = SubResource( 5 )
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+anims/RESET = SubResource( 6 )
+anims/die = SubResource( 7 )
+
+[node name="explode" type="Area" parent="."]
+
+[node name="CollisionShape" type="CollisionShape" parent="explode"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 47.8171, 28.9068 )
+shape = SubResource( 8 )
+
+[node name="explSnd" type="AudioStreamPlayer3D" parent="."]
+transform = Transform( 1000, 0, 0, 0, 1000, 0, 0, 0, 1000, 0, 149.024, 43.6921 )
+stream = ExtResource( 2 )
+unit_size = 10.0
+pitch_scale = 1.5
+
+[node name="PathCollision" type="Area" parent="."]
+monitoring = false
+monitorable = false
+
+[node name="CollisionShape" type="CollisionShape" parent="PathCollision"]
+shape = SubResource( 11 )
+
+[node name="MeshInstance" type="MeshInstance" parent="PathCollision"]
+transform = Transform( 12.0305, 0, 0, 0, 100, 0, 0, 0, 11.5642, 0, 195.581, 0 )
+visible = false
+mesh = SubResource( 12 )
+material/0 = null
+
+[node name="VisibilityNotifier" type="VisibilityNotifier" parent="."]
+aabb = AABB( -3500, -3500, -3500, 7000, 7000, 7000 )
+
+[connection signal="body_entered" from="explode" to="." method="_on_explode_body_entered"]
+[connection signal="camera_exited" from="VisibilityNotifier" to="." method="_on_VisibilityNotifier_camera_exited"]

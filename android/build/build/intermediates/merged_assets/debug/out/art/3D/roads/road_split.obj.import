@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/road_split.obj-b131ff12c486811bd4980492c1a6a3ad.mesh"
+
+[deps]
+
+files=[ "res://.import/road_split.obj-b131ff12c486811bd4980492c1a6a3ad.mesh" ]
+
+source_file="res://art/3D/roads/road_split.obj"
+dest_files=[ "res://.import/road_split.obj-b131ff12c486811bd4980492c1a6a3ad.mesh", "res://.import/road_split.obj-b131ff12c486811bd4980492c1a6a3ad.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

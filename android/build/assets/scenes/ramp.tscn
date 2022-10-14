@@ -1,0 +1,138 @@
+[gd_scene load_steps=8 format=2]
+
+[ext_resource path="res://art/3D/ramp.obj" type="ArrayMesh" id=1]
+[ext_resource path="res://art/3D/arrows/arrow1.obj" type="ArrayMesh" id=2]
+
+[sub_resource type="GDScript" id=2]
+script/source = "extends StaticBody
+
+onready var speed : float = 0.15
+onready var point : int = 1
+
+func tween_player(body : Spatial, point : Spatial) -> void:
+	var tween : Tween = $Tween
+	tween.interpolate_property(body, \"transform:origin\", body.transform.origin, point.global_transform.origin, speed, Tween.TRANS_LINEAR, Tween.EASE_OUT_IN)
+	tween.start()
+#	yield(tween, \"tween_completed\")
+	
+func _on_Area_body_entered(body: Node) -> void:
+	if(\"player\" in body.name):
+#		Engine.time_scale = 0.001
+		$collisionShape.disabled = true
+		speed = 0.06
+		for i in $rampShort.get_child_count():
+#			body.jump_point = get_node(\"rampShort/p\" + str(i + 1))
+			tween_player(body, get_node(\"rampShort/p\" + str(i)))
+			print(i)
+			yield(get_tree().create_timer(speed), \"timeout\")
+			speed = 0.001
+			
+		print(\"end\")
+		body.jump_point = null
+		$collisionShape.disabled = false
+		
+		
+"
+
+[sub_resource type="BoxShape" id=5]
+extents = Vector3( 0.0491149, 1, 0.214568 )
+
+[sub_resource type="SpatialMaterial" id=3]
+vertex_color_use_as_albedo = true
+albedo_color = Color( 0.286275, 0.298039, 0.329412, 1 )
+
+[sub_resource type="ConvexPolygonShape" id=6]
+points = PoolVector3Array( -0.095, 0.149, 0.267, 0.1, 0, 0.267, -0.095, 0, 0.267, -0.095, 0.149, -0.267, 0.1, 0, -0.267, -0.095, 0, -0.267 )
+
+[sub_resource type="SpatialMaterial" id=4]
+vertex_color_use_as_albedo = true
+albedo_color = Color( 0, 1, 0, 1 )
+metallic_specular = 1.0
+roughness = 0.0
+
+[node name="ramp" type="StaticBody"]
+script = SubResource( 2 )
+
+[node name="Area" type="Area" parent="."]
+
+[node name="CollisionShape" type="CollisionShape" parent="Area"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0203556, 0, 0 )
+shape = SubResource( 5 )
+
+[node name="ramp" type="MeshInstance" parent="."]
+transform = Transform( 0.2, 0, 0, 0, 0.2, 0, 0, 0, 0.15, 0, 0, 0 )
+mesh = ExtResource( 1 )
+material/0 = SubResource( 3 )
+
+[node name="rampShort" type="Spatial" parent="."]
+
+[node name="p0" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0690293, -0.000128601, 0 )
+
+[node name="p1" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0287391, 0.0451787, 0 )
+
+[node name="p2" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0978923, 0.0895322, 0 )
+
+[node name="p3" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.164184, 0.132932, 0 )
+
+[node name="p4" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.238107, 0.17347, 0 )
+
+[node name="p5" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.330152, 0.204947, 0 )
+
+[node name="p6" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.424582, 0.2245, 0 )
+
+[node name="p7" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.525212, 0.228316, 0 )
+
+[node name="p8" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.61058, 0.220685, 0 )
+
+[node name="p9" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.687841, 0.20447, 0 )
+
+[node name="p10" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.782567, 0.171521, 0 )
+
+[node name="p11" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.85876, 0.126218, 0 )
+
+[node name="p12" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.921568, 0.0737063, 0 )
+
+[node name="p13" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.963783, 0.0098691, 0 )
+
+[node name="p14" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.991583, -0.0560274, 0 )
+
+[node name="p15" type="Position3D" parent="rampShort"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, -0.123, 0 )
+
+[node name="Tween" type="Tween" parent="."]
+
+[node name="collisionShape" type="CollisionShape" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.108115, -0.00702208, 0 )
+shape = SubResource( 6 )
+
+[node name="MeshInstance" type="MeshInstance" parent="."]
+transform = Transform( -0.0519615, 8.15666e-09, 0.03, 0.03, -2.18557e-09, 0.0519615, 4.89399e-09, 0.1, -1.31134e-09, -0.084, 0.079, 0.17 )
+mesh = ExtResource( 2 )
+material/0 = SubResource( 4 )
+
+[node name="MeshInstance2" type="MeshInstance" parent="."]
+transform = Transform( -0.0519615, 8.15666e-09, 0.03, 0.03, -2.18557e-09, 0.0519615, 4.89399e-09, 0.1, -1.31134e-09, -0.084, 0.079, -0.17 )
+mesh = ExtResource( 2 )
+material/0 = SubResource( 4 )
+
+[node name="MeshInstance3" type="MeshInstance" parent="."]
+transform = Transform( -0.0519615, 8.15666e-09, 0.03, 0.03, -2.18557e-09, 0.0519615, 4.89399e-09, 0.1, -1.31134e-09, -0.084, 0.079, 0 )
+mesh = ExtResource( 2 )
+material/0 = SubResource( 4 )
+
+[connection signal="body_entered" from="Area" to="." method="_on_Area_body_entered"]

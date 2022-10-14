@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/house-hill-normal.obj-360f0940889c5582c8bf5b5f44b2647e.mesh"
+
+[deps]
+
+files=[ "res://.import/house-hill-normal.obj-360f0940889c5582c8bf5b5f44b2647e.mesh" ]
+
+source_file="res://art/3D/buildings/house-hill-normal.obj"
+dest_files=[ "res://.import/house-hill-normal.obj-360f0940889c5582c8bf5b5f44b2647e.mesh", "res://.import/house-hill-normal.obj-360f0940889c5582c8bf5b5f44b2647e.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

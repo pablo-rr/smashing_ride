@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://art/2D/pups/base.png" type="Texture" id=1]
+
+[sub_resource type="SphereShape" id=1]
+radius = 0.287439
+
+[node name="pup" type="Spatial"]
+
+[node name="Area" type="Area" parent="."]
+
+[node name="CollisionShape" type="CollisionShape" parent="Area"]
+shape = SubResource( 1 )
+
+[node name="Sprite3D" type="Sprite3D" parent="."]
+transform = Transform( 0.025, 0, 0, 0, 0.025, 0, 0, 0, 0.025, 0, 0, 0 )
+billboard = 1
+texture = ExtResource( 1 )

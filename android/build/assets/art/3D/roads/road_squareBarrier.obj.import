@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/road_squareBarrier.obj-dab08fef6bebd6c8d416bbb56cd3aa0e.mesh"
+
+[deps]
+
+files=[ "res://.import/road_squareBarrier.obj-dab08fef6bebd6c8d416bbb56cd3aa0e.mesh" ]
+
+source_file="res://art/3D/roads/road_squareBarrier.obj"
+dest_files=[ "res://.import/road_squareBarrier.obj-dab08fef6bebd6c8d416bbb56cd3aa0e.mesh", "res://.import/road_squareBarrier.obj-dab08fef6bebd6c8d416bbb56cd3aa0e.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/road_drivewayDouble.obj-4086d4d42a7cbdccfbbd37f6540b4e1b.mesh"
+
+[deps]
+
+files=[ "res://.import/road_drivewayDouble.obj-4086d4d42a7cbdccfbbd37f6540b4e1b.mesh" ]
+
+source_file="res://art/3D/roads/road_drivewayDouble.obj"
+dest_files=[ "res://.import/road_drivewayDouble.obj-4086d4d42a7cbdccfbbd37f6540b4e1b.mesh", "res://.import/road_drivewayDouble.obj-4086d4d42a7cbdccfbbd37f6540b4e1b.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

@@ -13,15 +13,21 @@ _global_script_classes=[ {
 "class": "AdMob",
 "language": "GDScript",
 "path": "res://addons/admob-lib/admob.gd"
+}, {
+"base": "Control",
+"class": "VirtualJoystick",
+"language": "GDScript",
+"path": "res://addons/joystick/virtual_joystick.gd"
 } ]
 _global_script_class_icons={
-"AdMob": "res://addons/admob-lib/icon.png"
+"AdMob": "res://addons/admob-lib/icon.png",
+"VirtualJoystick": ""
 }
 
 [application]
 
-config/name="Godot SVA Framework"
-run/main_scene="res://scenes/app.tscn"
+config/name="Taxi"
+run/main_scene="res://scenes/game.tscn"
 config/icon="res://SVAicon.png"
 
 [autoload]
@@ -34,16 +40,70 @@ AudioManager="*res://scripts/singletons/AudioManager.gd"
 AdManager="*res://scripts/singletons/AdManager.gd"
 ScoreManager="*res://scripts/singletons/ScoreManager.gd"
 
+[debug]
+
+settings/fps/force_fps=60
+
 [display]
 
 window/size/width=720
 window/size/height=1280
 window/size/test_width=360
 window/size/test_height=640
+window/vsync/use_vsync=false
 window/handheld/orientation="portrait"
 window/stretch/mode="2d"
 window/stretch/aspect="keep"
 
+[editor_plugins]
+
+enabled=PoolStringArray( "res://addons/PathMaker/plugin.cfg" )
+
+[global]
+
+androi=false
+
+[importer_defaults]
+
+texture={
+"compress/bptc_ldr": 0,
+"compress/hdr_mode": 0,
+"compress/lossy_quality": 0.7,
+"compress/mode": 3,
+"compress/normal_map": 0,
+"detect_3d": true,
+"flags/anisotropic": false,
+"flags/filter": true,
+"flags/mipmaps": true,
+"flags/repeat": 0,
+"flags/srgb": 2,
+"process/HDR_as_SRGB": false,
+"process/fix_alpha_border": true,
+"process/invert_color": false,
+"process/normal_map_invert_y": false,
+"process/premult_alpha": false,
+"size_limit": 0,
+"stream": false,
+"svg/scale": 1.0
+}
+
+[input]
+
+mbl={
+"deadzone": 0.5,
+"events": [ Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"button_mask":0,"position":Vector2( 0, 0 ),"global_position":Vector2( 0, 0 ),"factor":1.0,"button_index":1,"pressed":false,"doubleclick":false,"script":null)
+ ]
+}
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
 [rendering]
 
+quality/driver/driver_name="GLES2"
+vram_compression/import_etc=true
+quality/directional_shadow/size.mobile=4096
+quality/filters/anisotropic_filter_level=2
+quality/filters/use_nearest_mipmap_filter=true
 environment/default_environment="res://default_env.tres"

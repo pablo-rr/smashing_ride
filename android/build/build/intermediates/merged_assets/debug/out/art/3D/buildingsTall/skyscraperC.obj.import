@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/skyscraperC.obj-47c3c5c7a96b949c87bb19047ec2139f.mesh"
+
+[deps]
+
+files=[ "res://.import/skyscraperC.obj-47c3c5c7a96b949c87bb19047ec2139f.mesh" ]
+
+source_file="res://art/3D/buildingsTall/skyscraperC.obj"
+dest_files=[ "res://.import/skyscraperC.obj-47c3c5c7a96b949c87bb19047ec2139f.mesh", "res://.import/skyscraperC.obj-47c3c5c7a96b949c87bb19047ec2139f.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

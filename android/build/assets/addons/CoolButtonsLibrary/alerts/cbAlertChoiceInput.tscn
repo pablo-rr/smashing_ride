@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=2]
+
+[ext_resource path="res://addons/CoolButtonsLibrary/alerts/reused/input.tscn" type="PackedScene" id=1]
+[ext_resource path="res://addons/CoolButtonsLibrary/alerts/cbAlertChoice.tscn" type="PackedScene" id=2]
+[ext_resource path="res://fonts/resources/roboto_36.tres" type="DynamicFont" id=3]
+
+[node name="cbAlertChoiceInput" instance=ExtResource( 2 )]
+
+[node name="alertDesc" parent="content" index="0"]
+margin_bottom = 262.0
+
+[node name="icon" parent="content" index="1"]
+margin_top = 266.0
+margin_bottom = 266.0
+
+[node name="input" parent="content" index="2" instance=ExtResource( 1 )]
+margin_top = 270.0
+custom_fonts/font = ExtResource( 3 )

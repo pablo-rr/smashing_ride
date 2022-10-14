@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/firetruck.obj-68fbe8c697bd11122f0d735a651cf12a.mesh"
+
+[deps]
+
+files=[ "res://.import/firetruck.obj-68fbe8c697bd11122f0d735a651cf12a.mesh" ]
+
+source_file="res://art/3D/carsV3/firetruck.obj"
+dest_files=[ "res://.import/firetruck.obj-68fbe8c697bd11122f0d735a651cf12a.mesh", "res://.import/firetruck.obj-68fbe8c697bd11122f0d735a651cf12a.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

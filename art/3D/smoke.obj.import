@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/smoke.obj-1fc84267b896d7274dd6f5035d6f1afa.mesh"
+
+[deps]
+
+files=[ "res://.import/smoke.obj-1fc84267b896d7274dd6f5035d6f1afa.mesh" ]
+
+source_file="res://art/3D/smoke.obj"
+dest_files=[ "res://.import/smoke.obj-1fc84267b896d7274dd6f5035d6f1afa.mesh", "res://.import/smoke.obj-1fc84267b896d7274dd6f5035d6f1afa.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

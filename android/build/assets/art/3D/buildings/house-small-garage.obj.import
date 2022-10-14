@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/house-small-garage.obj-5b49ae62650c7498a2d3b8ef0ec54553.mesh"
+
+[deps]
+
+files=[ "res://.import/house-small-garage.obj-5b49ae62650c7498a2d3b8ef0ec54553.mesh" ]
+
+source_file="res://art/3D/buildings/house-small-garage.obj"
+dest_files=[ "res://.import/house-small-garage.obj-5b49ae62650c7498a2d3b8ef0ec54553.mesh", "res://.import/house-small-garage.obj-5b49ae62650c7498a2d3b8ef0ec54553.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://art/3D/nature/Wood_Fence_01.obj" type="ArrayMesh" id=1]
+
+[sub_resource type="BoxShape" id=1]
+extents = Vector3( 0.399115, 0.564128, 1.35437 )
+
+[node name="fence1" type="MeshInstance"]
+mesh = ExtResource( 1 )
+material/0 = null
+
+[node name="StaticBody" type="StaticBody" parent="."]
+transform = Transform( 1.775, 0, 0, 0, 1.543, 0, 0, 0, 1.28, -0.178754, 0, 0.387796 )
+
+[node name="CollisionShape" type="CollisionShape" parent="StaticBody"]
+transform = Transform( 1, 0, 0, 0, 0.999999, 0, 0, 0, 1, 0.230795, 0.34822, -1.4893 )
+shape = SubResource( 1 )

@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/road_intersectionLine.obj-1ad2b7c176b3ab62ebe7aca190411c5b.mesh"
+
+[deps]
+
+files=[ "res://.import/road_intersectionLine.obj-1ad2b7c176b3ab62ebe7aca190411c5b.mesh" ]
+
+source_file="res://art/3D/roads/road_intersectionLine.obj"
+dest_files=[ "res://.import/road_intersectionLine.obj-1ad2b7c176b3ab62ebe7aca190411c5b.mesh", "res://.import/road_intersectionLine.obj-1ad2b7c176b3ab62ebe7aca190411c5b.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

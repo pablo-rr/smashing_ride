@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/house-modern.obj-5e5771a46468a8287cb389785dcb0e0e.mesh"
+
+[deps]
+
+files=[ "res://.import/house-modern.obj-5e5771a46468a8287cb389785dcb0e0e.mesh" ]
+
+source_file="res://art/3D/buildings/house-modern.obj"
+dest_files=[ "res://.import/house-modern.obj-5e5771a46468a8287cb389785dcb0e0e.mesh", "res://.import/house-modern.obj-5e5771a46468a8287cb389785dcb0e0e.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286

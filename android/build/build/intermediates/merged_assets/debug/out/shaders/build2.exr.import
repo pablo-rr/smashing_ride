@@ -1,0 +1,35 @@
+[remap]
+
+importer="texture"
+type="StreamTexture"
+path="res://.import/build2.exr-d1da40fa2fcf6d36be01bbf6d8d01102.stex"
+metadata={
+"vram_texture": false
+}
+
+[deps]
+
+source_file="res://shaders/build2.exr"
+dest_files=[ "res://.import/build2.exr-d1da40fa2fcf6d36be01bbf6d8d01102.stex" ]
+
+[params]
+
+compress/mode=0
+compress/lossy_quality=0.7
+compress/hdr_mode=0
+compress/bptc_ldr=0
+compress/normal_map=0
+flags/repeat=false
+flags/filter=true
+flags/mipmaps=false
+flags/anisotropic=false
+flags/srgb=false
+process/fix_alpha_border=true
+process/premult_alpha=false
+process/HDR_as_SRGB=false
+process/invert_color=false
+process/normal_map_invert_y=false
+stream=false
+size_limit=0
+detect_3d=false
+svg/scale=1.0

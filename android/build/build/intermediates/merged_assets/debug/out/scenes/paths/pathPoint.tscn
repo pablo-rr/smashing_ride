@@ -1,0 +1,74 @@
+[gd_scene load_steps=5 format=2]
+
+[sub_resource type="GDScript" id=3]
+script/source = "extends Area
+
+
+
+onready var index : int = 0
+onready var dir : Vector3
+onready var car : PackedScene = preload(\"res://scenes/npcs/npc.tscn\")
+onready var colors : Array = [
+	preload(\"res://shaders/ColorBlack.tres\")
+	,preload(\"res://shaders/ColorBlue.tres\")
+	,preload(\"res://shaders/ColorCyan.tres\")
+	,preload(\"res://shaders/ColorGreen.tres\")
+	,preload(\"res://shaders/ColorOrange.tres\")
+	,preload(\"res://shaders/ColorPurple.tres\")
+	,preload(\"res://shaders/ColorRed.tres\")
+	,preload(\"res://shaders/ColorWhite.tres\")
+]
+
+func _on_pathPoint_area_entered(area: Area) -> void:
+	if(area.name == \"PathCollision\" and !area.get_parent().hit):
+		if(area.get_parent().point == []):
+			area.get_parent().point = get_parent().get_next_point([self, index])
+		else:
+			area.get_parent().point = get_parent().get_next_point(area.get_parent().point)
+		
+		var next_point : Array = get_parent().get_next_point([self, index])
+		dir = -(area.get_parent().transform.origin - next_point[0].transform.origin).normalized()
+		dir.y = 0
+		area.get_parent().dir = dir
+		
+		area.get_parent().look_at(next_point[0].global_transform.origin, Vector3.UP)
+		area.get_parent().rotation = Vector3(0, area.get_parent().rotation.y + deg2rad(180), 0)
+
+func _on_VisibilityNotifier_camera_entered(camera: Camera) -> void:
+	var spawn : int = rand_range(0, 3)
+	var color : int = rand_range(0, colors.size() -1)
+	if(spawn == 0):
+		var car_instance : Spatial = car.instance()
+		car_instance.transform.origin.x = transform.origin.x
+		car_instance.transform.origin.z = transform.origin.z
+		print(car_instance.transform.origin)
+#		car_instance.transform.origin.y = -0.05
+#		car_instance.transform.origin.y = -0.15
+		car_instance.get_node(\"MeshInstance\").set_surface_material(1, colors[color])
+#		get_parent().get_parent().get_parent().get_parent().add_child(car_instance)
+		get_parent().get_parent().get_parent().add_child(car_instance)
+"
+
+[sub_resource type="BoxShape" id=1]
+extents = Vector3( 0.011818, 1.22903, 0.0121018 )
+
+[sub_resource type="CubeMesh" id=2]
+
+[sub_resource type="SpatialMaterial" id=4]
+
+[node name="pathPoint" type="Area"]
+script = SubResource( 3 )
+
+[node name="CollisionShape" type="CollisionShape" parent="."]
+shape = SubResource( 1 )
+
+[node name="MeshInstance" type="MeshInstance" parent="."]
+transform = Transform( 0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 0, 0, 0 )
+mesh = SubResource( 2 )
+material/0 = SubResource( 4 )
+
+[node name="VisibilityNotifier" type="VisibilityNotifier" parent="."]
+aabb = AABB( -3.5, -3.5, -3.5, 7, 7, 7 )
+
+[connection signal="area_entered" from="." to="." method="_on_pathPoint_area_entered"]
+[connection signal="camera_entered" from="VisibilityNotifier" to="." method="_on_VisibilityNotifier_camera_entered"]

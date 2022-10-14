@@ -1,0 +1,20 @@
+[remap]
+
+importer="wavefront_obj"
+type="Mesh"
+path="res://.import/Low_Poly_Vehicles_car_modPipes.obj-b50a6f74b5f9e62e9c26dbc33e6239fc.mesh"
+
+[deps]
+
+files=[ "res://.import/Low_Poly_Vehicles_car_modPipes.obj-b50a6f74b5f9e62e9c26dbc33e6239fc.mesh" ]
+
+source_file="res://art/3D/cars/models/Low_Poly_Vehicles_car_modPipes.obj"
+dest_files=[ "res://.import/Low_Poly_Vehicles_car_modPipes.obj-b50a6f74b5f9e62e9c26dbc33e6239fc.mesh", "res://.import/Low_Poly_Vehicles_car_modPipes.obj-b50a6f74b5f9e62e9c26dbc33e6239fc.mesh" ]
+
+[params]
+
+generate_tangents=true
+scale_mesh=Vector3( 1, 1, 1 )
+offset_mesh=Vector3( 0, 0, 0 )
+octahedral_compression=true
+optimize_mesh_flags=4286
