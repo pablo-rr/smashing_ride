@@ -8,6 +8,9 @@ script/source = "extends KinematicBody
 
 export var speed : float = 0.92
 
+onready var path_parent_scene : PackedScene = preload(\"res://scenes/paths/pathParent.tscn\")
+onready var path_point_scene : PackedScene = preload(\"res://scenes/paths/pathPoint.tscn\")
+onready var path_to_follow : Spatial = null
 onready var point : Array = []
 onready var dir : Vector3 = Vector3.ZERO
 onready var rot_speed : float = 0.0
@@ -18,6 +21,7 @@ func _ready() -> void:
 	$PathCollision.monitoring = true
 	$PathCollision.transform.origin.y += 100
 	$PathCollision.transform.origin.y -= 100
+	get_ai_path()
 
 func _physics_process(delta: float) -> void:
 	dir = Vector3(0, 0, 1)
@@ -42,7 +46,23 @@ func hit(impact_origin : Vector3) -> void:
 		speed = 2.8
 		rot_speed = 10.0
 
-
+func get_ai_path() -> void:
+	var path_array : Array = get_parent().get_node(\"Navigation\").get_simple_path(global_transform.origin, Vector3(-17, 0, -0.5), false)
+	var path_parent : Spatial = path_parent_scene.instance()
+	
+	print(path_array)
+	
+	get_parent().get_node(\"paths\").add_child(path_parent)
+	
+	for vector in path_array:
+		print(vector)
+		var path_point : Spatial = path_point_scene.instance()
+		path_point.global_transform.origin = vector
+		path_parent.add_child(path_point)
+		
+	print(path_parent.get_children())
+	path_to_follow = path_parent
+	
 func _on_explode_body_entered(body: Node) -> void:
 	if(hit):
 		speed = 0.0
@@ -192,8 +212,8 @@ tracks/3/keys = {
 extents = Vector3( 132.814, 52.102, 210.843 )
 
 [sub_resource type="CylinderShape" id=11]
-radius = 13.594
 height = 702.197
+radius = 13.594
 
 [sub_resource type="CylinderMesh" id=12]
 
@@ -204,20 +224,6 @@ script = SubResource( 3 )
 [node name="MeshInstance" type="MeshInstance" parent="."]
 transform = Transform( -7.64949e-06, 0, 175, 0, 175, 0, -175, 0, -7.64949e-06, 0, -33, 24.452 )
 mesh = ExtResource( 1 )
-material/0 = null
-material/1 = null
-material/2 = null
-material/3 = null
-material/4 = null
-material/5 = null
-material/6 = null
-material/7 = null
-material/8 = null
-material/9 = null
-material/10 = null
-material/11 = null
-material/12 = null
-material/13 = null
 
 [node name="CarHit" type="CollisionShape" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 133.53, 23.1074 )
@@ -268,7 +274,6 @@ shape = SubResource( 11 )
 transform = Transform( 12.0305, 0, 0, 0, 100, 0, 0, 0, 11.5642, 0, 195.581, 0 )
 visible = false
 mesh = SubResource( 12 )
-material/0 = null
 
 [node name="VisibilityNotifier" type="VisibilityNotifier" parent="."]
 aabb = AABB( -3500, -3500, -3500, 7000, 7000, 7000 )

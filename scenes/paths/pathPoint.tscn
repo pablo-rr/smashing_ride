@@ -7,7 +7,7 @@ script/source = "extends Area
 
 onready var index : int = 0
 onready var dir : Vector3
-onready var car : PackedScene = preload(\"res://scenes/npcs/npc.tscn\")
+#onready var car : PackedScene = preload(\"res://scenes/npcs/npc.tscn\")
 onready var colors : Array = [
 	preload(\"res://shaders/ColorBlack.tres\")
 	,preload(\"res://shaders/ColorBlue.tres\")
@@ -20,7 +20,7 @@ onready var colors : Array = [
 ]
 
 func _on_pathPoint_area_entered(area: Area) -> void:
-	if(area.name == \"PathCollision\" and !area.get_parent().hit):
+	if(area.name == \"PathCollision\" and !area.get_parent().hit and area.get_parent().path_to_follow == get_parent()):
 		if(area.get_parent().point == []):
 			area.get_parent().point = get_parent().get_next_point([self, index])
 		else:
@@ -33,20 +33,21 @@ func _on_pathPoint_area_entered(area: Area) -> void:
 		
 		area.get_parent().look_at(next_point[0].global_transform.origin, Vector3.UP)
 		area.get_parent().rotation = Vector3(0, area.get_parent().rotation.y + deg2rad(180), 0)
-
-func _on_VisibilityNotifier_camera_entered(camera: Camera) -> void:
-	var spawn : int = rand_range(0, 3)
-	var color : int = rand_range(0, colors.size() -1)
-	if(spawn == 0):
-		var car_instance : Spatial = car.instance()
-		car_instance.transform.origin.x = transform.origin.x
-		car_instance.transform.origin.z = transform.origin.z
-		print(car_instance.transform.origin)
-#		car_instance.transform.origin.y = -0.05
-#		car_instance.transform.origin.y = -0.15
-		car_instance.get_node(\"MeshInstance\").set_surface_material(1, colors[color])
-#		get_parent().get_parent().get_parent().get_parent().add_child(car_instance)
-		get_parent().get_parent().get_parent().add_child(car_instance)
+#
+#func _on_VisibilityNotifier_camera_entered(camera: Camera) -> void:
+#	var spawn : int = rand_range(0, 3)
+#	var color : int = rand_range(0, colors.size() -1)
+#	if(spawn == 0):
+#		var car_instance : Spatial = car.instance()
+#		car_instance.transform.origin.x = transform.origin.x
+#		car_instance.transform.origin.z = transform.origin.z
+#		car_instance.path_to_follow = get_parent()
+#		print(car_instance.transform.origin)
+##		car_instance.transform.origin.y = -0.05
+##		car_instance.transform.origin.y = -0.15
+#		car_instance.get_node(\"MeshInstance\").set_surface_material(1, colors[color])
+##		get_parent().get_parent().get_parent().get_parent().add_child(car_instance)
+#		get_parent().get_parent().get_parent().add_child(car_instance)
 "
 
 [sub_resource type="BoxShape" id=1]
